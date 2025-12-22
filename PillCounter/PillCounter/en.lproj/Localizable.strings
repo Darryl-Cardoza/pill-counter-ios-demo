@@ -1,0 +1,75 @@
+/*
+  Localizable.strings
+  PillCounter
+
+  Created by HC on 05/11/25.
+*/
+
+// MARK: - GENERAL
+
+"APP_NAME" = "Pill Counter";
+"COMPANY_NAME" = "RITE TECHNOLOGIES";
+"VERSION" = "Version";
+
+// MARK: - LOGIN
+
+"REMEMBER_ME" = "Remember me";
+"LOGIN_BUTTON" = "LOGIN";
+"EMAIL_INPUT_FIELD_PLACEHOLDER" = "Email";
+"EMAIL_ERROR_MESSAGE" = "Please enter your email address." ;
+
+// MARK: - OTP VERIFICATION SCREEN
+
+"CODE_SENT_TEXT" = "Security code has been sent to";
+"RESEND_CODE" = "Resend code";
+"VERIFY_BUTTON" = "VERIFY";
+
+// MARK: - DASHBOARD
+
+"COMPLETED" = "completed";
+"PARTIAL" = "pending";
+
+// MARK: - FIXED COUNT
+
+"FIXED_COUNT_TITLE" = "Dispense Count";
+"FIXED_COUNT_SUBTITLE" = "For counting prescribed quantities";
+
+// MARK: - REGULAR COUNT
+
+"REGULAR_COUNT_TITLE" = "Quick Count";
+"REGULAR_COUNT_SUBTITLE" = "For day to day counts";
+
+// MARK: - HAMBURGER MENU
+"HISTORY" = "History" ;
+"PROFILE" = "Profile" ;
+"SETTINGS" = "Settings" ;
+"LOGOUT" = "Logout" ;
+
+"HISTORY_DURATION_MONTH" = "month";
+"HISTORY_DURATION_MONTHS" = "months";
+
+
+// MARK: PILL COUNT VIEW
+"TOTAL_PILL_COUNT" = "TOTAL" ;
+"PILL_COUNT_HEADER" = "PILLS COUNT" ;
+
+
+// MARK: PROIFLE
+"FIRST_NAME" = "First Name";
+"LAST_NAME" = "Last Name";
+"PHARMACY_NAME" = "Pharmacy Name";
+"NPI_ID" = "Npi No.";
+"PHONE_NUMBER" = "Phone Number";
+"EMAIL" = "Email";
+    /// BUTTONS
+"DELETE" = "DELETE";
+"SKIP" = "SKIP";
+"SAVE" = "SAVE";
+
+
+// MARK: USER SETTINGS VIEW
+"TOGGLE_BUTTON_TEXT" = "Always ask to add Notes";
+"SAVE_HISTORY" = "Save history for";
+
+
+// MARK: ERROR

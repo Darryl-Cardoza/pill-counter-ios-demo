@@ -1,2 +1,2 @@
-# pill-counter-ios
-Repo dedicated for Pill Counter Mobile App (IOS)
+# Pill_Counter
+Pill Counter app which counts the pills with offline model
