@@ -64,7 +64,8 @@ struct UserProfileScreen: View {
             }
         }
         .onTapGesture {
-            hideKeyboard()
+            //            hideKeyboard()
+            UIApplication.hideKeyboard()
         }
         .customPopup(isPresented: $showDeleteConfirmation) {
             deleteConfirmation
@@ -92,89 +93,6 @@ struct UserProfileScreen: View {
                 }
             }
         )
-    }
-
-    private func hideKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder), to: nil, from: nil,
-            for: nil)
-    }
-
-    private var leftProfileColumn: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(NSLocalizedString("FIRST_NAME", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: false,
-                text: $userViewModel.firstName,
-                validation: .name,
-                maxLength: 30
-            )
-
-            Text(NSLocalizedString("PHARMACY_NAME", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: false,
-                text: $userViewModel.pharmacyName,
-                validation: .none
-            )
-
-            Text(NSLocalizedString("EMAIL", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: true,
-                text: $userViewModel.email
-            )
-        }
-    }
-
-    private var rightProfileColumn: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(NSLocalizedString("LAST_NAME", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: false,
-                text: $userViewModel.lastName,
-                validation: .name,
-                maxLength: 30
-            )
-
-            Text(NSLocalizedString("PHONE_NUMBER", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: false,
-                text: $userViewModel.phoneNumber,
-                keyboardType: .phonePad,
-                validation: .phone
-            )
-
-            Text(NSLocalizedString("NPI_ID", comment: ""))
-                .foregroundStyle(appColors.text)
-
-            PillCounterInputField(
-                imageName: nil,
-                placeholder: "",
-                disabled: false,
-                text: $userViewModel.npiID,
-                keyboardType: .phonePad,
-                validation: .phone
-            )
-        }
     }
 
     private var potraitProfileColums: some View {
@@ -257,6 +175,83 @@ struct UserProfileScreen: View {
         }
     }
 
+    private var leftProfileColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(NSLocalizedString("FIRST_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.firstName,
+                validation: .name,
+                maxLength: 30
+            )
+
+            Text(NSLocalizedString("PHARMACY_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.pharmacyName,
+                validation: .none
+            )
+
+            Text(NSLocalizedString("EMAIL", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: true,
+                text: $userViewModel.email
+            )
+        }
+    }
+
+    private var rightProfileColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(NSLocalizedString("LAST_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.lastName,
+                validation: .name,
+                maxLength: 30
+            )
+
+            Text(NSLocalizedString("PHONE_NUMBER", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.phoneNumber,
+                keyboardType: .phonePad,
+                validation: .phone
+            )
+
+            Text(NSLocalizedString("NPI_ID", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.npiID,
+                keyboardType: .phonePad,
+                validation: .phone
+            )
+        }
+    }
+
     private var actionButtons: some View {
         EqualWidthHStackButtons(spacing: 16) {
 
@@ -308,18 +303,14 @@ struct UserProfileScreen: View {
     }
 
     private func onDeleteTapped() {
-        print("🗑 DELETE tapped")
         showDeleteConfirmation = true
     }
 
     private func onSkipTapped() {
-        print("⏭ SKIP tapped")
         router.navigateBack()
     }
 
     private func onSaveTapped() {
-        print("💾 SAVE tapped")
-
         Task {
             await userViewModel.updateUserProfile()
 

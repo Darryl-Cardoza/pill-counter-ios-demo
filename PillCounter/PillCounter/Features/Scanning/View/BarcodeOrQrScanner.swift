@@ -468,7 +468,7 @@ extension QRBarcodeScannerView {
                 }
             }
 
-            OTPInputView(otp: $pillScanViewModel.targetCount, reverse: true)
+            BoxesInputField(otp: $pillScanViewModel.targetCount, reverse: true)
                 .padding()
                 .padding(.horizontal)
 

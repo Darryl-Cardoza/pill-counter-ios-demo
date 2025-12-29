@@ -61,6 +61,12 @@ class UserViewModel: ObservableObject {
     // this published variable is only if the user navigates to the pill count view
     @Published var currentTransactionTxnId: Int64?
 
+    // force update
+    @Published var isForceUpdate: Bool = false
+
+    // maintenance
+    @Published var isMaintenance: Bool = false
+
     // get the user db
     let userLocalDB = UserLocalDataSource.shared
 
@@ -73,29 +79,46 @@ class UserViewModel: ObservableObject {
     // settings repo
     let settingsRepo = SettingsRepository.shared
 
+    // MARK: MOBILE SETTINGS
     // mobile color settings.
     func loadMobileThemeSettings() {
         let appVersion =
             Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            ?? "Unknown"
+            ?? "0.0.0"
 
         Task.detached(priority: .background) {
             do {
                 let response = try await self.settingsRepo.getMobileSettings(
-                    currentVersion: appVersion)
+                    currentVersion: appVersion
+                )
 
-                if let colors = response.data?.settings?.colors {
-                    await MainActor.run {
+                await MainActor.run {
+                    if let colors = response.data?.settings?.colors {
                         AppColors.shared.update(with: colors)
-                        print("App Colors updated successfully.")
+                    }
+
+                    self.isMaintenance =
+                        response.data?.isMaintenanceMode ?? false
+
+                    if let iosVersion = response.data?.iosVersion {
+                        self.isForceUpdate =
+                            iosVersion.isVersionGreater(than: appVersion)
+                    } else {
+                        self.isForceUpdate = false
                     }
                 }
+
             } catch {
                 print("❌ Failed to load mobile settings: \(error)")
+                await MainActor.run {
+                    self.isMaintenance = false
+                    self.isForceUpdate = false
+                }
             }
         }
     }
 
+    // MARK: GET USER
     // get user info
     func getUser() async {
 
@@ -139,9 +162,6 @@ class UserViewModel: ObservableObject {
                 {
                     // saved in the background thread
                     userLocalDB.saveUser(from: getUserResult)
-                    print("Saved the user to local db.")
-                } else {
-                    print("User already there in the local db. not saving you.")
                 }
 
             }
@@ -167,6 +187,7 @@ class UserViewModel: ObservableObject {
         self.fullName = fullName
     }
 
+    // MARK: UPDATE USER PROFILE
     // update user profile
     func updateUserProfile() async {
 
@@ -219,6 +240,7 @@ class UserViewModel: ObservableObject {
         return fullNameChanged || pharmacyChanged || phoneChanged || npiChanged
     }
 
+    // MARK: ALL TRANSACTION FILTER BY COUNT TYPE
     // get user's all active transactions.
     func getAllTransactionsAndFilterByCountType() {
 
@@ -248,6 +270,7 @@ class UserViewModel: ObservableObject {
             pillLocalDB.getAllRegularCompletedTransactionsCount(for: user)
     }
 
+    // MARK: TRANSACTION BY DATE
     // get user's transactions filtered by date.
     func getTransactionsByDate(selectedDate: Date) async {
         guard let user = userLocalDB.getUserByUserId(by: userID) else {
@@ -276,6 +299,7 @@ class UserViewModel: ObservableObject {
             user: user, startTs: startTimestamp, endTs: endTimestamp)
     }
 
+    // MARK: ALL PARTIAL TRANSACTIONS
     // get user's fixed count partial transactoins
     func getAllPartialTransactions(countType: CountType) async {
         guard let user = userLocalDB.getUserByUserId(by: userID) else {
@@ -288,12 +312,6 @@ class UserViewModel: ObservableObject {
             pillLocalDB.fetchAllTransactionFixedOrRegularPartial(
                 for: user, countType: countType) ?? []
 
-        for txn in self.historyCountTransactions {
-            print(
-                "   👉 Found Txn: \(txn.txn_id) | Drug: \(txn.drug?.drug_name ?? "nil")"
-            )
-        }
-
         self.actualCountedPillsForTheTransactions = [:]
 
         for transaction in historyCountTransactions {
@@ -304,6 +322,7 @@ class UserViewModel: ObservableObject {
         }
     }
 
+    // MARK: SOFT DELETE TRANSACITONS
     // func to soft delete a partular transaction.
     func softDeleteTheSelectedTransaction(
         transactionId: Int64, countType: CountType
@@ -317,6 +336,7 @@ class UserViewModel: ObservableObject {
         }
     }
 
+    // MARK: - FORCE COMPLETE TRANSACTION
     // func to make the transaction as force completed.
     func forceCompleteTheSelectedTransaction(txnId: Int64, countType: CountType)
         async
@@ -332,16 +352,17 @@ class UserViewModel: ObservableObject {
         }
     }
 
+    // MARK: - COMPLETE TRANSACTION
     func completeTheSelectedTransaction(
         txnId: Int64,
         countType: CountType
     ) async {
-        // MARK: - Update Status
+        // update the statuse
         pillLocalDB.updateTransactionStatus(
             txnId: txnId,
             newStatus: .COMPLETED
         )
-        // MARK: - Refresh Partial Transactions
+        //  Refresh Partial Transactions
         if countType == .FIXED {
             await getAllPartialTransactions(countType: .FIXED)
         } else {
@@ -390,8 +411,6 @@ class UserViewModel: ObservableObject {
 
                 AppStorageManager.shared.tokenExpiryTimestamp =
                     newExpiryDate.timeIntervalSince1970
-
-                print("✅ Token Refreshed. New expiry: \(newExpiryDate)")
             }
 
         } catch let error {
@@ -417,10 +436,7 @@ class UserViewModel: ObservableObject {
         // Optional: Add a "Buffer" (e.g., 5 minutes) so we refresh slightly before it actually dies.
         // If (Now > Expiry - 5 minutes) -> Refresh
         if currentDate > expiryDate.addingTimeInterval(-300) {
-            print("⚠️ Token is expired or expiring soon. Calling Refresh...")
             await refreshToken()
-        } else {
-            print("✅ Token is valid. No need to refresh.")
         }
     }
 
@@ -442,18 +458,14 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    // MARK: - DUMMY DATA (FOR TESTING ONLY)
+    // MARK: - GENERATE DUMMY DATA
     func generateDummyData() {
-        print("🧪 Generating Dummy Data...")
         let context = CoreDataManager.shared.context
 
         // 1. Check for Existing User OR Create Dummy User
         var user = userLocalDB.getUserByUserId(by: userID)
 
         if user == nil {
-            print(
-                "⚠️ No logged in user found. Creating a DUMMY USER for testing..."
-            )
 
             let dummyUser = UserEntity(context: context)
             // Assign dummy values based on your UserEntity definition
@@ -478,8 +490,6 @@ class UserViewModel: ObservableObject {
             // Update the ViewModel's userID so subsequent fetches work
             self.userID = dummyUser.user_id ?? ""
             user = dummyUser
-
-            print("✅ Created Dummy User: \(dummyUser.name ?? "Unknown")")
         }
 
         guard let currentUser = user else {
@@ -549,17 +559,13 @@ class UserViewModel: ObservableObject {
 
         // 4. Save to Core Data
         CoreDataManager.shared.save(context: context)
-        print(
-            "✅ Added 10 dummy transactions for user: \(currentUser.name ?? "")."
-        )
 
         // 5. Refresh the list immediately
         Task {
             await getAllPartialTransactions(countType: .FIXED)
         }
     }
-    
-    
+
     // MARK: - DELETE USER PROFILE
     func deleteUserProfile() async {
 

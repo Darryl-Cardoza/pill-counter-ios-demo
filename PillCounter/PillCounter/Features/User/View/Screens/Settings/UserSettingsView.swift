@@ -40,34 +40,32 @@ struct UserSettingsView: View {
                     showHamburgerMenu: false,
                     title: NSLocalizedString("SETTINGS", comment: "")
                 )
-
-                // 4. Confirmation Popup
-                if showConfirmationPopup {
-                    ConfirmationDialogue(
-                        title: "Are you sure want to keep history for \(pendingOption?.displayText ?? selectedSaveHistoryOption.displayText)",
-                        message:
-                            "Note: Data older than this period will be permanently deleted.",
-                        cancelButtonText: "NO",
-                        confirmButtonText: "YES"
-                    ) {
-                        // Cancel Action: Reset pending and hide popup
-                        pendingOption = nil
-                        showConfirmationPopup = false
-                    } onConfirm: {
-                        // Confirm Action: Commit the change
-                        if let newOption = pendingOption {
-                            selectedSaveHistoryOption = newOption
-                            AppStorageManager.shared.saveHistoryOption =
-                                newOption
-                            print("History option saved: \(newOption.rawValue)")
-
-                            // TODO: Call your ViewModel here to trigger the cleanup of old data if necessary
-                            // e.g. userViewModel.cleanUpOldHistory()
-                        }
-                        showConfirmationPopup = false
-                    }
-                }
             }
+        }
+        .customPopup(isPresented: $showConfirmationPopup) {
+            confirmationPopUp
+        }
+    }
+    
+    private var confirmationPopUp: some View {
+        ConfirmationDialogue(
+            title: "Are you sure want to keep history for \(pendingOption?.displayText ?? selectedSaveHistoryOption.displayText)",
+            message:
+                "Note: Data older than this period will be permanently deleted.",
+            cancelButtonText: "NO",
+            confirmButtonText: "YES"
+        ) {
+            // Cancel Action: Reset pending and hide popup
+            pendingOption = nil
+            showConfirmationPopup = false
+        } onConfirm: {
+            // Confirm Action: Commit the change
+            if let newOption = pendingOption {
+                selectedSaveHistoryOption = newOption
+                AppStorageManager.shared.saveHistoryOption =
+                    newOption
+            }
+            showConfirmationPopup = false
         }
     }
 

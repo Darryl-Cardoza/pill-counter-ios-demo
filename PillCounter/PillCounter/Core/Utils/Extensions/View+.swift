@@ -38,6 +38,12 @@ extension View {
     }
 }
 
+extension View {
+    func keyboardAdaptive() -> some View {
+        self.modifier(KeyboardAdaptive())
+    }
+}
+
 struct MaxWidthPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
 

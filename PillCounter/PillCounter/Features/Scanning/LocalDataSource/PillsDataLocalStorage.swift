@@ -463,10 +463,6 @@ final class PillsDataLocalStorage {
         guard let cutoffDate = selectedOption.getCutoffDate() else { return }
         let cutoffTimestamp = Int64(cutoffDate.timeIntervalSince1970 * 1000)
 
-        print(
-            "🧹 Starting Cleanup: Removing data older than \(selectedOption.displayText) (Timestamp: \(cutoffTimestamp))"
-        )
-
         // 2. Fetch Request
         let request: NSFetchRequest<PillCountTransactionEntity> =
             PillCountTransactionEntity.fetchRequest()
@@ -478,7 +474,6 @@ final class PillsDataLocalStorage {
             let oldTransactions = try mainThreadContext.fetch(request)
 
             if oldTransactions.isEmpty {
-                print("✅ No old transactions to clean up.")
                 return
             }
 

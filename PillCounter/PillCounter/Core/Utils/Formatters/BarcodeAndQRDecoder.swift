@@ -62,22 +62,12 @@ class BarcodeAndQRDecoder: ObservableObject {
      - Returns: A GS1BarcodeData object with all extracted fields.
      */
     func decode(_ raw: String) -> GS1BarcodeData {
-
-        print("📥 RAW INPUT:")
-        print(raw)
-        print("----------------------------")
-
         // 1️⃣ Detect plain numeric barcodes (EAN-8, EAN-13, UPC-A, ITF-14)
         // These do NOT contain GS1 AIs like (01)
         if raw.range(of: #"^\d{8,14}$"#, options: .regularExpression) != nil {
-
-            print("⚠️ Plain numeric EAN/UPC/ITF barcode detected — no GS1 AIs found.")
             let gtin14 = normalizeGTIN14(raw)
 
             let result = GS1BarcodeData(gtin: gtin14)
-
-            print("➡️ Converted to GTIN-14: \(gtin14 ?? "nil")")
-            print("----------------------------")
 
             return result
         }
@@ -89,10 +79,6 @@ class BarcodeAndQRDecoder: ObservableObject {
             options: .regularExpression
         )
         .replacingOccurrences(of: "\u{001D}", with: "") // GS (FNC1) separator if present
-
-        print("🧹 CLEANED BARCODE:")
-        print(cleaned)
-        print("----------------------------")
 
         var result = GS1BarcodeData()
 
@@ -113,11 +99,6 @@ class BarcodeAndQRDecoder: ObservableObject {
         result.grossWeightKg = extractWeight("GrossWeightKgs", from: cleaned)
         result.netWeightLb = extractWeight("NetWeightPounds", from: cleaned)
         result.grossWeightLb = extractWeight("GrossWeightPounds", from: cleaned)
-
-        // 6️⃣ Final debug print
-        print("📦 FINAL DECODED DATA:")
-        dump(result)
-        print("----------------------------")
 
         return result
     }

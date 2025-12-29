@@ -22,12 +22,6 @@ struct KeyboardAdaptive: ViewModifier {
     }
 }
 
-extension View {
-    func keyboardAdaptive() -> some View {
-        self.modifier(KeyboardAdaptive())
-    }
-}
-
 extension Publishers {
     static var keyboardHeight: AnyPublisher<CGFloat, Never> {
         let willShow = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
@@ -43,5 +37,16 @@ extension Publishers {
 private extension Notification {
     var keyboardHeight: CGFloat {
         (userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height ?? 0
+    }
+}
+
+extension UIApplication {
+    static func hideKeyboard() {
+        shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 }

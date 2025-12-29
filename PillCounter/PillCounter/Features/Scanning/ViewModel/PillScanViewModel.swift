@@ -59,10 +59,6 @@ class PillScanViewModel: ObservableObject {
     )
         async
     {
-        print(
-            "🔍 [DEBUG] scannedPill called with rawValue: \(rawValueFromBarcodeOrQr)"
-        )
-
         let decodedGs1Value = decoder.decode(rawValueFromBarcodeOrQr)
         let gtin = decodedGs1Value.gtin ?? ""
 
@@ -71,15 +67,10 @@ class PillScanViewModel: ObservableObject {
         // 1. Generate a potential ID (only used if we create a NEW drug)
         var drugIdToUse = generateUniqueDrugId()
 
-        print("🔍 [DEBUG] Checking Local DB for GTIN: \(gtin)...")
-
         // 2. CHECK LOCAL DB
         if let drugFoundInLocalStorage = pillDataLocalStorage.getPillByNdc(
             by: gtin)
         {
-            print(
-                "✅ [DEBUG] Found in Local DB: \(drugFoundInLocalStorage.drug_name ?? "Unknown")"
-            )
 
             drugName = drugFoundInLocalStorage.drug_name
 
@@ -91,9 +82,6 @@ class PillScanViewModel: ObservableObject {
             getAllTransactionDetailsOfTheCurrentTransaction()
             isDrugFound = true
             if countType == .FIXED {
-                print(
-                    "TARGET COUNT IN THE SCANNED PILL FUCNTION IS : \(targetCount.joined())"
-                )
                 updateTargetCountForCurrentTransaction()
             }
             return
@@ -249,8 +237,6 @@ class PillScanViewModel: ObservableObject {
                     await self.createTransaction(
                         drugId: drugId, countType: countType)
                     
-                    print("TRANSACTION ID AFTER CREATING THE TRANSACTION : \(self.currentTransaction?.txn_id ?? 0)")
-                    
                     if countType == .FIXED {
                         self.updateTargetCountForCurrentTransaction()
                     }
@@ -272,7 +258,6 @@ class PillScanViewModel: ObservableObject {
             !userId.isEmpty,
             let user = userDataLocalStorage.getUserByUserId(by: userId)
         else {
-            print("❌ no user found.")
             return
         }
 
@@ -293,14 +278,11 @@ class PillScanViewModel: ObservableObject {
             barcodeImagePath: savedPath
         )
 
-        print(">>> transaction created successfully.")
-
         // step 3: set the latest transaction as current transaction.
         if let latest = pillDataLocalStorage.fetechLatestTransactionOfUser(
             for: user)
         {
             self.currentTransaction = latest
-            print("current transaction set successfully.")
         }
     }
 
@@ -322,7 +304,6 @@ class PillScanViewModel: ObservableObject {
 
         // first check if the current transaction id is there or not.
         guard let txnId = currentTransaction?.txn_id else {
-            print("❌ No current transaction selected.")
             return
         }
 
@@ -344,26 +325,20 @@ class PillScanViewModel: ObservableObject {
     func updateTargetCountForCurrentTransaction() {
 
         let joinedString = targetCount.joined()
-        print("JOINDED TARGET COUNT: '\(joinedString)'")
 
         // 1. Check if the string is empty first
         if joinedString.isEmpty {
-            print("⚠️ Target count is empty. Skipping update.")
             return
         }
 
         // 2. Convert to Int32 safely
         guard let targetValue = Int32(joinedString) else {
-            print("❌ Cannot convert string '\(joinedString)' to Int32")
             return
         }
 
         guard let txnId = currentTransaction?.txn_id else {
-            print("❌ No current transaction found.")
             return
         }
-        
-        print("TRANSACTION ID : \(txnId)")
 
         pillDataLocalStorage.updateTargetCount(
             txnId: txnId, targetCount: targetValue)
@@ -407,16 +382,6 @@ class PillScanViewModel: ObservableObject {
             pillDataLocalStorage.fetchPillCountTransactionByTransactionId(
                 txnId: txnId)
 
-        if let txn = currentTransaction {
-            print("✅ Transaction Loaded")
-            print("   • txn_id: \(txn.txn_id)")
-            print("   • drug_id: \(txn.drug_id)")
-            print("   • target_count: \(txn.target_count)")
-            print("   • created_at: \(txn.created_at)")
-        } else {
-            print("❌ No transaction found for txnId: \(txnId)")
-        }
-
         // Set drug name
         drugName = currentTransaction?.drug?.drug_name ?? "Unknown"
 
@@ -428,8 +393,6 @@ class PillScanViewModel: ObservableObject {
         if count > 0 {
             let totalPills = getTotalPillCountOfCurrentTransaction()
         }
-
-        print("-------------------------------")
     }
 
     // soft delete the pill transaction detail of the current transaction.

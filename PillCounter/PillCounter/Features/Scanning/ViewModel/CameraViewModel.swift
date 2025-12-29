@@ -148,8 +148,6 @@ class CameraViewModel: NSObject, ObservableObject,
             DispatchQueue.main.async { self.photoCaptureCompletion?(nil) }
             return
         }
-        
-        print("📸 [CameraVM] Image captured successfully")
         DispatchQueue.main.async {
             self.photoCaptureCompletion?(image)
         }

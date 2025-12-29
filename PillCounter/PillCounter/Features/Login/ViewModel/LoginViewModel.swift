@@ -47,13 +47,13 @@ class LoginViewModel: ObservableObject {
     // for logout
     @Published var isLogoutSucces: Bool = false
 
-    // MARK: - Resend Timer
+    // MARK: - RESEND TIMER
     @Published var resendCooldown: Int = 60
     @Published var isResendDisabled: Bool = true
 
     private var resendTimer: Timer?
 
-    // MARK: - Derived
+    // MARK: - DERVIED
     var resendTimerText: String {
         "\(resendCooldown) s"
     }
@@ -62,7 +62,7 @@ class LoginViewModel: ObservableObject {
         otp.joined().count == 4
     }
     
-    // MARK: - Timer Control
+    // MARK: - TIMER CONTROL
     func startResendTimer() {
         resendTimer?.invalidate()
         

@@ -242,7 +242,8 @@ struct CountHistoryView: View {
                         listItem(
                             txnId: txn.txn_id,  // Pass ID for selection logic
                             name: txn.drug?.drug_name ?? "N/A",
-                            date: formattedDate(from: txn.created_at),
+                            date:  "\(Formatter.getDateString(from: txn.created_at)) • " +
+                            "\(Formatter.getTimeString(from: txn.created_at))",
                             trailingText: "\(counted)"
                                 + (router.selectedPillScanningType == .FIXED
                                     ? " / \(txn.target_count)" : ""),
@@ -315,34 +316,9 @@ struct CountHistoryView: View {
             }
             
             // 2. IMAGE LOGIC
-            ZStack {
-                // If path exists and image loads, show it
-                if let path = barcodeImagePath, !path.isEmpty,
-                   let loadedImage = PhotoFileManager.shared.loadImage(from: path)
-                {
-                    loadedImage
-                        .resizable()
-                        .scaledToFill() // Fill the square
-                        .frame(width: 50, height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(appColors.text.opacity(0.1), lineWidth: 1)
-                        )
-                } else {
-                    // Placeholder if no image
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(appColors.text.opacity(0.8), lineWidth: 1)
-                        .frame(width: 70, height: 50)
-                        .overlay(
-                            Image("placeholder_history")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 25, height: 25)
-                        )
-                }
-            }
-            .padding(0)
+            ThumbnailImageView(
+                imagePath: barcodeImagePath
+            )
             
             // 3. TEXT INFO
             VStack(alignment: .leading, spacing: 4) {
@@ -383,14 +359,6 @@ struct CountHistoryView: View {
     }
 
     // MARK: - LOGIC HELPERS
-
-    func formattedDate(from timestamp: Int64) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(timestamp) / 1000)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd MMM yyyy • hh:mm a"
-        return formatter.string(from: date)
-    }
-
     // Toggle single selection
     private func toggleSelection(for id: Int64) {
         if selectedTxnIds.contains(id) {
@@ -499,7 +467,6 @@ struct CountHistoryView: View {
                                     )
                             }
                         case .forceComplete:
-                            print("Completed force Completed.")
                             Task {
                                 await userViewModel.forceCompleteTheSelectedTransaction(
                                     txnId: selectedTransasctionId ?? 0,

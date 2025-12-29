@@ -8,21 +8,23 @@
 import SwiftUI
 
 struct HamburgerMenuView: View {
-
+    
+    // MARK: - PROPERTIES
     @Environment(\.isLandscape) private var isLandscape
-
     @EnvironmentObject private var router: Router
     @EnvironmentObject private var loginViewModel: LoginViewModel
     @EnvironmentObject private var appColors: AppColors
     @EnvironmentObject private var userViewModel: UserViewModel
-
+    
     @State private var showLogoutPopup: Bool = false
-
+    
     @AppStorage(AppStorageManager.AppStorageKeys.saveHistoryOption)
+    
     private var storedHistoryOption: String = SaveHistoryOption.default.rawValue
-
+    
     private let menuItems = HamburgerMenuItem.allCases
 
+    // MARK: BODY
     var body: some View {
         ZStack {
             BaseView(
@@ -37,31 +39,34 @@ struct HamburgerMenuView: View {
                 showBackButton: true,
                 showHamburgerMenu: false
             )
+        }
+        .customPopup(isPresented: $showLogoutPopup) {
+            logoutPopUp
+        }
+    }
 
-            if showLogoutPopup {
-                ConfirmationDialogue(
-                    title: "Confirm Logout",
-                    message: "Are you sure you want to logout?",
-                    cancelButtonText: "cancel",
-                    confirmButtonText: "Logout"
-                ) {
+    // MARK: - LOGOUT POP UP
+    private var logoutPopUp: some View {
+        ConfirmationDialogue(
+            title: "Confirm Logout",
+            message: "Are you sure you want to logout?",
+            cancelButtonText: "cancel",
+            confirmButtonText: "Logout"
+        ) {
+            showLogoutPopup = false
+        } onConfirm: {
+            Task {
+                await loginViewModel.logout()
+                if loginViewModel.isLogoutSucces {
                     showLogoutPopup = false
-                } onConfirm: {
-                    Task {
-                        await loginViewModel.logout()
-                        if loginViewModel.isLogoutSucces {
-                            showLogoutPopup = false
-                            router.setRoot(
-                                to: .authentication(.login(.LoginEmail)))
-                        }
-                    }
+                    router.setRoot(
+                        to: .authentication(.login(.LoginEmail)))
                 }
-
             }
         }
     }
 
-    // MARK: - Menu Content
+    // MARK: - MENU CONTENT
     private var menuContent: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
@@ -95,7 +100,7 @@ struct HamburgerMenuView: View {
         )
     }
 
-    // MARK: - Menu Row Builder
+    // MARK: - MENU ROW BUILDER
     @ViewBuilder
     private func menuRow(for item: HamburgerMenuItem, index: Int) -> some View {
         let color: Color =
@@ -165,7 +170,7 @@ struct HamburgerMenuView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Trailing View Builder
+    // MARK: - TRAILING VIEW BUILDER
     @ViewBuilder
     private func trailingView(
         for item: HamburgerMenuItem, isLandscape: Bool, monthDuration: Int
@@ -224,7 +229,7 @@ struct HamburgerMenuView: View {
         }
     }
 
-    // MARK: - Buttons Row Helper
+    // MARK: - BUTTONS ROWS HELPER
     @ViewBuilder
     private func countButtonsRow(
         completedCount: Int,
@@ -277,11 +282,10 @@ struct HamburgerMenuView: View {
         }
     }
 
-    // MARK: - Menu Action Handler
+    // MARK: - MENU ACTION HANDLER
     private func handleMenuSelection(_ item: HamburgerMenuItem) {
         switch item {
         case .FixedCount:
-            print("Fixed Count Tapped")
             router.selectedPillScanningType = .FIXED
             router.navigate(
                 to: .authentication(
@@ -292,7 +296,6 @@ struct HamburgerMenuView: View {
                 to: .authentication(.user(.userSettings(.settings))))
 
         case .RegularCount:
-            print("Regular Count Tapped")
             router.selectedPillScanningType = .REGULAR
             router.navigate(
                 to: .authentication(
