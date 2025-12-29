@@ -335,7 +335,7 @@ struct CountHistoryView: View {
                         .stroke(appColors.text.opacity(0.8), lineWidth: 1)
                         .frame(width: 70, height: 50)
                         .overlay(
-                            Image("placeholder_history") // Or system image "photo"
+                            Image("placeholder_history")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 25, height: 25)
@@ -463,8 +463,7 @@ struct CountHistoryView: View {
                     horizontalPadding: 32,
                     verticalPadding: 14,
                     iconSize: 0,
-                    action: { showMenuOptions = false },
-                    frameWidth: nil
+                    action: { showMenuOptions = false }
                 )
 
                 PillCountingButton(
@@ -509,8 +508,7 @@ struct CountHistoryView: View {
                                 )
                             }
                         }
-                    },
-                    frameWidth: nil
+                    }
                 )
             }
         }

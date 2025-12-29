@@ -67,7 +67,13 @@ struct HistoryTransactionDetailView: View {
         }
         .onAppear {
             // Load specific details if necessary
-            transaction = pillScanViewModel.currentTransaction
+            if pillScanViewModel.currentTransaction == nil {
+                let dummyTransaction =
+                    PreviewDataHelper.shared.createDummyTransaction()
+
+                pillScanViewModel.currentTransaction = dummyTransaction
+                transaction = dummyTransaction
+            }
         }
         .onDisappear {
             transaction = nil
@@ -114,21 +120,29 @@ struct HistoryTransactionDetailView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     batchesGrid  // Ensure this refers to your Horizontal Grid
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
                 }
+                .padding(.top, -24)
                 .frame(height: 180)
             }
-            .padding(.top, 0)  // No extra padding needed in portrait
+            .padding(.top, 0)
             .frame(
                 maxWidth: .infinity,
                 maxHeight: .infinity,
                 alignment: .topLeading
             )
 
-            deleteOkButtons
-                .padding()
-                .padding(.horizontal, UIDevice.current.userInterfaceIdiom == .pad ? 100 : 0)
+            Spacer()
 
+            HStack {
+                Spacer()
+                deleteOkButtons
+                Spacer()
+            }
+            .padding(
+                .horizontal,
+                UIDevice.current.userInterfaceIdiom == .pad ? 100 : 24
+            )
+            .padding(.top, -60)
         }
         .padding(.top, 30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -165,58 +179,61 @@ struct HistoryTransactionDetailView: View {
         )
     }
 
-    private func landscapeLayout(totalWidth: CGFloat, safeArea: EdgeInsets)
-        -> some View
-    {
+    private func landscapeLayout(
+        totalWidth: CGFloat,
+        safeArea: EdgeInsets
+    ) -> some View {
+
         let usableWidth = totalWidth - safeArea.leading - safeArea.trailing
-        let leftSectionWidth = usableWidth * 0.65  // summary + details
+        let leftMiddleWidth = usableWidth * 0.65
 
-        return ZStack(alignment: .bottomLeading) {
+        return HStack(alignment: .top, spacing: 20) {
 
-            // 🔹 EXISTING layout (unchanged)
-            HStack(alignment: .top, spacing: 20) {
+            // LEFT + MIDDLE + BUTTONS (STACKED)
+            VStack(alignment: .leading, spacing: 20) {
 
-                // SECTION 1: Summary & Notes
-                VStack(alignment: .leading, spacing: 20) {
-                    summaryCard
-                        .frame(maxWidth: .infinity)
+                // LEFT + MIDDLE COLUMNS
+                HStack(alignment: .top, spacing: 20) {
 
-                    if let notes = transaction?.note, !notes.isEmpty {
-                        notesSection(notes)
+                    // LEFT COLUMN
+                    VStack(alignment: .leading, spacing: 20) {
+                        summaryCard
+
+                        if let notes = transaction?.note, !notes.isEmpty {
+                            notesSection(notes)
+                        }
                     }
+                    .frame(width: leftMiddleWidth * 0.55)
+
+                    // MIDDLE COLUMN
+                    VStack {
+                        detailsInfoList
+                        Spacer()
+                    }
+                    .frame(width: leftMiddleWidth * 0.45)
+                }
+                HStack {
+                    Spacer()
+                    deleteOkButtons
                     Spacer()
                 }
-                .frame(width: usableWidth * 0.35)
-
-                // SECTION 2: Details List
-                VStack {
-                    detailsInfoList
-                    Spacer()
-                }
-                .frame(width: usableWidth * 0.30)
-
-                // SECTION 3: Batches Grid
-                VStack {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        batchesGridVertical
-                            .padding(.bottom, 20)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+                .padding(.top, -30)
+                .padding(.bottom, 10)
             }
-            .padding(.top, 80)
-            .padding(.bottom, 90)  // ⬅ space for buttons
-            .padding(.leading, safeArea.leading + 55)
-            .padding(.trailing, safeArea.trailing + 55)
-            // 🔹 BUTTONS (below Summary + Details)
-            deleteOkButtons
-                .frame(width: leftSectionWidth)
-                .padding(.leading, safeArea.leading + 55)
-                .padding(.bottom, 24)
+            .frame(width: leftMiddleWidth)
+
+            // RIGHT COLUMN (Batches)
+            ScrollView(.vertical, showsIndicators: false) {
+                batchesGridVertical
+            }
+            .frame(maxWidth: .infinity)
         }
-        .frame(width: totalWidth, alignment: .topLeading)
+        .padding(.top, 90)
+        .padding(.leading, safeArea.leading + 55)
+        .padding(.trailing, safeArea.trailing + 55)
         .background(appColors.primaryBackground)
     }
+
 
     // MARK: - HELPERS & UI
     // MARK: SUMMARY CARD
@@ -225,12 +242,7 @@ struct HistoryTransactionDetailView: View {
 
             // Image / Icon Container
             ZStack {
-                // 1. Base Background
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(appColors.secondary.opacity(0.1))
-                    .frame(width: 160, height: 100)
-
-                // 2. Image Logic
+                // Image Logic
                 if let path = transaction?.barcode_image,
                     !path.isEmpty,
                     let image = PhotoFileManager.shared.loadImage(from: path)
@@ -243,15 +255,16 @@ struct HistoryTransactionDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                 } else {
                     // Show Placeholder Icon
-                    Image(systemName: "photo")
-                        .font(.system(size: isLandscape ? 30 : 40))
-                        .foregroundStyle(appColors.secondary)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(appColors.text.opacity(0.8), lineWidth: 1)
+                        .frame(width: 160, height: 100)
+                        .overlay(
+                            Image("placeholder_history")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 25, height: 25)
+                        )
                 }
-
-                // 3. Border Overlay (keeps the border neat on top of the image)
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(appColors.secondary.opacity(0.3), lineWidth: 1)
-                    .frame(width: 160, height: 100)
             }
 
             Spacer()
@@ -280,7 +293,7 @@ struct HistoryTransactionDetailView: View {
                 .padding()  // Padding inside the scroll view
                 .frame(maxWidth: .infinity, alignment: .topLeading)  // Align text to top-left
         }
-        .frame(height: 150)
+        .frame(height: 130)
         .frame(maxWidth: .infinity)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -398,35 +411,38 @@ struct HistoryTransactionDetailView: View {
         -> some View
     {
         VStack(alignment: .leading, spacing: 0) {
-            // Image
-            if let path = detail.image_path,
-                let image = PhotoFileManager.shared.loadImage(from: path)
-            {
-                image
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: 100)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 100)
-                    .overlay(
-                        Image(systemName: "photo")
-                            .foregroundStyle(Color.gray)
-                    )
-            }
+            // Image + Count Badge
+            ZStack {
 
-            // Info
-            HStack {
-                Text("Count: \(detail.pill_count)")
-                    .font(.headline)
-                    .foregroundStyle(appColors.text)
-                Spacer()
+                if let path = detail.image_path,
+                    let image = PhotoFileManager.shared.loadImage(from: path)
+                {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 100)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 100)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundStyle(Color.gray)
+                        )
+                }
+
+                // Count Circle
+                Text("\(detail.pill_count)")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(appColors.primary)
+                    .clipShape(Circle())
+                    .padding(8)
             }
-            .padding(12)
-            .background(appColors.secondaryBackground)
         }
         .cornerRadius(16)
         .overlay(
@@ -467,7 +483,7 @@ struct HistoryTransactionDetailView: View {
 }
 
 // MARK: - PREVIEW
-#Preview {
+#Preview(traits: .portrait) {
     let dummyTransaction = PreviewDataHelper.shared.createDummyTransaction()
     let mockRouter = Router()
     let mockAppColors = AppColors.shared
@@ -480,6 +496,7 @@ struct HistoryTransactionDetailView: View {
         .environmentObject(mockUserVM)
         .environmentObject(mockPillScanVM)
         .preferredColorScheme(.dark)
+        .previewInterfaceOrientation(.landscapeLeft)
 }
 
 struct PreviewDataHelper {
@@ -539,6 +556,33 @@ struct PreviewDataHelper {
             Date().addingTimeInterval(60).timeIntervalSince1970 * 1000)
         detail2.pillCountTransaction = txn
 
+        // Batch 3
+        let detail3 = PillCountTransactionDetailsEntity(context: context)
+        detail3.txn_details_id = 3
+        detail3.pill_count = 14
+        detail3.created_at = Int64(
+            Date().addingTimeInterval(120).timeIntervalSince1970 * 1000
+        )
+        detail3.pillCountTransaction = txn
+
+        // Batch 4
+        let detail4 = PillCountTransactionDetailsEntity(context: context)
+        detail4.txn_details_id = 4
+        detail4.pill_count = 8
+        detail4.created_at = Int64(
+            Date().addingTimeInterval(180).timeIntervalSince1970 * 1000
+        )
+        detail4.pillCountTransaction = txn
+
+        // Batch 5
+        let detail5 = PillCountTransactionDetailsEntity(context: context)
+        detail5.txn_details_id = 5
+        detail5.pill_count = 20
+        detail5.created_at = Int64(
+            Date().addingTimeInterval(240).timeIntervalSince1970 * 1000
+        )
+        detail5.pillCountTransaction = txn
+
         // 4. Link relationships
         txn.addToPillCountTransactionDetails([detail1, detail2])
 
@@ -554,7 +598,7 @@ struct DeleteOkButtons: View {
     let onOk: () -> Void
 
     var body: some View {
-        HStack(spacing: 16) {
+        EqualWidthHStackButtons(spacing: 16) {
 
             // DELETE
             PillCountingButton(

@@ -10,7 +10,7 @@ import SwiftUI
 struct AppNavigation: View {
     @EnvironmentObject private var router: Router
     @AppStorage(AppStorageManager.AppStorageKeys.isLoggedIn) var isLoggedIn:
-        Bool = false
+        Bool = true
 
     var body: some View {
         GeometryReader { geometry in
@@ -20,7 +20,7 @@ struct AppNavigation: View {
                     if isLoggedIn {
                         DashboardView()
                     } else {
-                        LoginEmailView()
+                        HistoryTransactionDetailView()
                     }
                 }
                 .navigationDestination(for: PillCounterFlow.self) {

@@ -280,8 +280,7 @@ extension OPillCountView {
                 iconSize: 0,
                 action: {
                     showZeroCountPopup = false
-                },
-                frameWidth: nil
+                }
             )
         }
         .frame(width: 300)
@@ -331,7 +330,8 @@ extension OPillCountView {
                         innerColor: appColors.secondary,
                         text: "\(selectedTransactionDetail?.pill_count ?? 0)",
                         textColor: appColors.text,
-                        font: .system(size: 18, weight: .bold)
+                        font: .system(size: 18, weight: .bold),
+                        isAnimated: false
                     )
                     Text(
                         "\(formattedDate(from: selectedTransactionDetail?.created_at ?? 0))"
@@ -482,8 +482,7 @@ extension OPillCountView {
                                             .selectedPillScanningType ?? .FIXED)
                             }
                         }
-                    },
-                    frameWidth: nil
+                    }
                 )
 
                 PillCountingButton(
@@ -507,8 +506,7 @@ extension OPillCountView {
                             )
                         }
                         showConfirmCompletionPopup = true
-                    },
-                    frameWidth: nil
+                    }
                 )
             }
         }
@@ -609,15 +607,14 @@ struct BottomControlsView: View {
                 )
             }
 
-            if showTransactionDetails {
-                TransactionDetailsScrollView(
-                    details: pillScanViewModel
-                        .currentTransactionTransactionDetails
-                        ?? [],
-                    appColors: appColors,
-                    onTap: onTransactionDetailTapped
-                )
-            }
+            TransactionDetailsScrollView(
+                details: pillScanViewModel
+                    .currentTransactionTransactionDetails ?? [],
+                appColors: appColors,
+                onTap: onTransactionDetailTapped
+            )
+            .opacity(showTransactionDetails ? 1 : 0)
+            .allowsHitTesting(showTransactionDetails)
 
             ActionButtons(
                 showTransactionDetails: $showTransactionDetails,
@@ -650,8 +647,11 @@ struct PortraitLayout: View {
                 innerColor: appColors.primary,
                 text: "\(cameraService.stableCount)",
                 textColor: .white,
-                font: .system(size: 24, weight: .bold)
+                font: .system(size: 24, weight: .bold),
+                isAnimated: true
             )
+            
+            Spacer()
 
             VStack(spacing: 10) {
                 Text(pillScanViewModel.drugName ?? "Loading...").font(.title3)
@@ -668,6 +668,7 @@ struct PortraitLayout: View {
                 }
             }
         }
+        .padding(.horizontal, 50)
         .padding(.top, 20)
     }
 }
@@ -693,7 +694,8 @@ struct LandscapeLayout: View {
                 innerColor: appColors.primary,
                 text: "\(cameraService.stableCount)",
                 textColor: .white,
-                font: .system(size: 24, weight: .bold)
+                font: .system(size: 24, weight: .bold),
+                isAnimated: true
             )
 
             if router.selectedPillScanningType == .FIXED {
@@ -811,35 +813,126 @@ struct CircleBadge: View {
     let text: String
     let textColor: Color
     let font: Font
+    let isAnimated: Bool
 
-    @State private var isAnimating = false
+    @State private var trimValue: CGFloat = 0
 
     var body: some View {
         ZStack {
-            Circle().stroke(outerColor, lineWidth: strokeWidth).frame(
-                width: size,
-                height: size
-            )
-            Circle().fill(innerColor)
+
+            // 🔵 Stroke Draw Animation (12 o’clock → full circle → repeat)
+            Circle()
+                .trim(from: 0, to: trimValue)
+                .stroke(
+                    outerColor,
+                    style: StrokeStyle(
+                        lineWidth: strokeWidth,
+                        lineCap: .round
+                    )
+                )
+                .frame(width: size, height: size)
+                // ⬅️ Move start point to 12 o’clock
+                .rotationEffect(.degrees(-90))
+                .animation(
+                    isAnimated
+                        ? .linear(duration: 1.2)
+                        : .none,
+                    value: trimValue
+                )
+
+            // ⚪ Static Inner Circle
+            Circle()
+                .fill(innerColor)
                 .frame(
                     width: size - strokeWidth * 3,
                     height: size - strokeWidth * 3
                 )
-                .scaleEffect(isAnimating ? 1.05 : 1.0)
-                .animation(
-                    .easeInOut(duration: 0.3).repeatForever(autoreverses: true),
-                    value: isAnimating
-                )
-            Text(text).font(font).foregroundColor(textColor).contentTransition(
-                .numericText()
-            )
+
+            // 🔢 Text
+            Text(text)
+                .font(font)
+                .foregroundColor(textColor)
+                .contentTransition(.numericText())
         }
-        .onAppear { isAnimating = true }
+        .onAppear {
+            guard isAnimated else { return }
+            startStrokeAnimation()
+        }
         .onChange(of: text) { oldValue, newValue in
             if oldValue != newValue {
-                let haptic = UIImpactFeedbackGenerator(style: .light)
-                haptic.impactOccurred()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         }
     }
+
+    // MARK: - Stroke Animation Loop
+    private func startStrokeAnimation() {
+        trimValue = 0
+
+        withAnimation(.linear(duration: 1.2)) {
+            trimValue = 1
+        }
+
+        // Reset and repeat
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            startStrokeAnimation()
+        }
+    }
+}
+
+
+
+#Preview {
+    VStack(spacing: 24) {
+
+        // Animated badge
+        CircleBadge(
+            size: 64,
+            strokeWidth: 4,
+            outerColor: .blue,
+            innerColor: .blue.opacity(0.15),
+            text: "5",
+            textColor: .white,
+            font: .headline,
+            isAnimated: true
+        )
+
+        // Static badge
+        CircleBadge(
+            size: 64,
+            strokeWidth: 4,
+            outerColor: .gray,
+            innerColor: .gray.opacity(0.15),
+            text: "0",
+            textColor: .white,
+            font: .headline,
+            isAnimated: false
+        )
+
+        // Smaller size test
+        CircleBadge(
+            size: 44,
+            strokeWidth: 3,
+            outerColor: .green,
+            innerColor: .green.opacity(0.2),
+            text: "12",
+            textColor: .white,
+            font: .subheadline,
+            isAnimated: true
+        )
+
+        // Larger size test
+        CircleBadge(
+            size: 80,
+            strokeWidth: 5,
+            outerColor: .purple,
+            innerColor: .purple.opacity(0.2),
+            text: "99",
+            textColor: .white,
+            font: .title2,
+            isAnimated: true
+        )
+    }
+    .padding()
+    .background(Color.black)
 }

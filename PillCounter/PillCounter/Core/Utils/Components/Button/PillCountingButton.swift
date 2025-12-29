@@ -17,7 +17,8 @@ struct PillCountingButton: View {
     let backgroundColor: Color
     let borderColor: Color
 
-    let frameWidth: CGFloat?
+    // Changed from let frameWidth: CGFloat? to be more flexible
+    let width: CGFloat?
 
     // icon color
     let iconColor: Color?
@@ -43,7 +44,7 @@ struct PillCountingButton: View {
         verticalPadding: CGFloat = 14,
         iconSize: CGFloat = 20,
         action: @escaping () -> Void,
-        frameWidth: CGFloat? = nil,
+        width: CGFloat? = nil, // Renamed for clarity
         iconColor: Color? = nil
     ) {
         self.iconName = iconName
@@ -57,7 +58,7 @@ struct PillCountingButton: View {
         self.verticalPadding = verticalPadding
         self.iconSize = iconSize
         self.action = action
-        self.frameWidth = frameWidth
+        self.width = width
         self.iconColor = iconColor
     }
 
@@ -67,34 +68,31 @@ struct PillCountingButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if let iconName = iconName, !iconName.isEmpty {
-                    if let iconColor = iconColor {
-                        Image(iconName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: iconSize, height: iconSize)
-                            .overlay(
-                                iconColor
-                                    .mask(
-                                        Image(iconName)
-                                            .resizable()
-                                            .scaledToFit()
-                                    )
-                            )
-                    } else {
-                        Image(iconName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: iconSize, height: iconSize)
+                    Group {
+                        if let iconColor = iconColor {
+                            Image(iconName)
+                                .resizable()
+                                .renderingMode(.template)
+                                .foregroundColor(iconColor)
+                        } else {
+                            Image(iconName)
+                                .resizable()
+                        }
                     }
+                    .scaledToFit()
+                    .frame(width: iconSize, height: iconSize)
                 }
 
                 Text(title)
                     .font(font)
                     .foregroundColor(textColor)
+                    // Ensure text stays on one line
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
-            .frame(width: frameWidth ?? nil)
+            // Use a ZStack behavior: If width is provided, frame it.
+            // If not, allow flexible expansion if maxWidth was infinity (not used here but good practice)
             .frame(maxWidth: .infinity, alignment: .center)
             .background(backgroundColor)
             .overlay(
@@ -102,34 +100,8 @@ struct PillCountingButton: View {
                     .stroke(borderColor, lineWidth: 1.5)
             )
             .cornerRadius(cornerRadius)
+            .contentShape(Rectangle()) // Ensures tap area fills the frame
         }
         .buttonStyle(.plain)
     }
-}
-
-#Preview {
-    VStack(spacing: 16) {
-        // Default
-        PillCountingButton(
-            iconName: "fixed_count",
-            title: "Count Pills",
-            action: { print("Count tapped") }
-        )
-
-        // Custom look
-        PillCountingButton(
-            iconName: nil,
-            title: "Add Entry",
-            textColor: .blue,
-            backgroundColor: .gray.opacity(0.2),
-            borderColor: Color.red,
-            font: .system(size: 12, weight: .semibold),
-            cornerRadius: 32,
-            horizontalPadding: 16,
-            verticalPadding: 12,
-            iconSize: 24,
-            action: { print("Add tapped") }
-        )
-    }
-    .padding()
 }

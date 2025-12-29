@@ -44,8 +44,7 @@ struct ConfirmationDialogue: View {
                     horizontalPadding: 32,
                     verticalPadding: 14,
                     iconSize: 0,
-                    action: onCancel,
-                    frameWidth: nil
+                    action: onCancel
                 )
 
                 PillCountingButton(
@@ -59,8 +58,7 @@ struct ConfirmationDialogue: View {
                     horizontalPadding: 32,
                     verticalPadding: 14,
                     iconSize: 0,
-                    action: onConfirm,
-                    frameWidth: nil
+                    action: onConfirm
                 )
             }
         }

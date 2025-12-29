@@ -558,4 +558,26 @@ class UserViewModel: ObservableObject {
             await getAllPartialTransactions(countType: .FIXED)
         }
     }
+    
+    
+    // MARK: - DELETE USER PROFILE
+    func deleteUserProfile() async {
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let response = try await userRepo.deleteUserProfile(
+                accessToken: accessToken
+            )
+
+            if response.isSuccess ?? false {
+                AppStorageManager.shared.logout()
+            }
+
+        } catch {
+            print("❌ Failed to delete user profile: \(error)")
+        }
+    }
+
 }

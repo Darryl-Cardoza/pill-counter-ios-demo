@@ -16,3 +16,32 @@ extension View {
             CustomPopup(isPresented: isPresented, popupContent: content))
     }
 }
+
+struct WidthReader: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(
+                GeometryReader { geo in
+                    Color.clear
+                        .preference(
+                            key: MaxWidthPreferenceKey.self,
+                            value: geo.size.width
+                        )
+                }
+            )
+    }
+}
+
+extension View {
+    func readWidth() -> some View {
+        self.modifier(WidthReader())
+    }
+}
+
+struct MaxWidthPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}

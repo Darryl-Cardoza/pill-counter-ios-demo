@@ -107,7 +107,7 @@ struct QRBarcodeScannerView: View {
                         Image("pencil")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 20, height: 20)
+                            .frame(width: 15, height: 15)
                             .padding()
                             .overlay(
                                 appColors.primary
@@ -116,14 +116,16 @@ struct QRBarcodeScannerView: View {
                                 Image("pencil")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 20, height: 20)
+                                    .frame(width: 15, height: 15)
                             }
                     }
                     .zIndex(10)
                 },
                 showBackButton: true,
                 showHamburgerMenu: false,  // We have a manual entry button instead
-                title: ""  // No title for scanner, usually cleaner
+                title: "",  // No title for scanner, usually cleaner
+                backButtonBackground: Color.white,
+                headerActionsBackground: Color.white
             )
             
             VStack {
@@ -133,7 +135,7 @@ struct QRBarcodeScannerView: View {
                 Text("Scan Barcode/QR Code")
                     .foregroundStyle(appColors.text)
                     .padding()
-                    .frame(width: 250)
+                    .frame(width: 225)
                     .background(appColors.primaryBackground)
                     .cornerRadius(24)
             }
@@ -399,8 +401,7 @@ extension QRBarcodeScannerView {
                         pillScanViewModel.drugName = ""
                         pillScanViewModel.drugNameMannuallyEntered = ""
                         showMannualEntryPopup = false
-                    },
-                    frameWidth: nil
+                    }
                 )
 
                 PillCountingButton(
@@ -415,6 +416,11 @@ extension QRBarcodeScannerView {
                     verticalPadding: 14,
                     iconSize: 0,
                     action: {
+                        
+                        if pillScanViewModel.ndcNumber.isEmpty {
+                            return
+                        }
+                        
                         if router.selectedPillScanningType == .FIXED {
                             showPillTargetCountPopup = true
                         } else {
@@ -434,8 +440,7 @@ extension QRBarcodeScannerView {
                                 showMannualEntryPopup = false
                             }
                         }
-                    },
-                    frameWidth: nil
+                    }
                 )
             }
         }
@@ -484,8 +489,7 @@ extension QRBarcodeScannerView {
                         pillScanViewModel.targetCount = ["", "", "", ""]
                         showMannualEntryPopup = false
                         showPillTargetCountPopup = false
-                    },
-                    frameWidth: nil
+                    }
                 )
 
                 PillCountingButton(
@@ -530,8 +534,7 @@ extension QRBarcodeScannerView {
                             }
                         }
                         //                        pillScanViewModel.targetCount = ["", "", "", ""]
-                    },
-                    frameWidth: nil
+                    }
                 )
             }
         }

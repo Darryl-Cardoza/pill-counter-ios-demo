@@ -23,6 +23,10 @@ protocol BaseRepositoryProtocol {
 
 extension BaseRepositoryProtocol {
 
+    // 🎛️ CONFIGURATION: Set to true to bypass SSL checks (Development Only)
+    // Matches Flutter's: static const bool _bypassSSLCertificate = true;
+    static var shouldBypassSSL: Bool { return true }
+
     // MARK: - Perform Request
     static func performRequest<T: Decodable>(
         url: String,
@@ -53,14 +57,31 @@ extension BaseRepositoryProtocol {
         
         logRequest(request, body: body)
 
+        // ------------------------------------------------------------------
+        // 🔄 SESSION SELECTION (SSL BYPASS LOGIC)
+        // ------------------------------------------------------------------
+        let session: URLSession
+        if shouldBypassSSL {
+            // Create a custom session with the Unsafe Delegate
+            session = URLSession(
+                configuration: .default,
+                delegate: UnsafeSSLManager(),
+                delegateQueue: nil
+            )
+        } else {
+            // Use the standard secure shared session
+            session = URLSession.shared
+        }
+        // ------------------------------------------------------------------
+
         var attempt = 0
         let maxRetries = 2
 
         while attempt <= maxRetries {
             do {
-                let (data, response) = try await URLSession.shared.data(
-                    for: request)
-                
+                // NOTE: We use 'session' here, not 'URLSession.shared'
+                let (data, response) = try await session.data(for: request)
+               
                 logResponse(data, response)
 
                 guard let httpResponse = response as? HTTPURLResponse else {
@@ -166,6 +187,29 @@ extension BaseRepositoryProtocol {
         print("==================================================================\n")
         #endif
     }
+}
 
-
+// MARK: - SSL Bypass Delegate (Development Only)
+// This class intercepts the SSL Handshake and blindly trusts the server.
+// Equivalent to Flutter's: ..badCertificateCallback = (cert, host, port) => true
+class UnsafeSSLManager: NSObject, URLSessionDelegate {
+    
+    func urlSession(_ session: URLSession,
+                    didReceive challenge: URLAuthenticationChallenge,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        // 1. Check if the challenge is for Server Trust (SSL Certificate)
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let serverTrust = challenge.protectionSpace.serverTrust {
+            
+            // 2. Create a credential from the trust object
+            let credential = URLCredential(trust: serverTrust)
+            
+            // 3. Tell URLSession to USE this credential (trusting it), regardless of validity
+            completionHandler(.useCredential, credential)
+        } else {
+            // 4. For all other auth types (like Basic Auth), perform default handling
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
 }

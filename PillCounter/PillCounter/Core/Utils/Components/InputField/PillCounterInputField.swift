@@ -33,7 +33,7 @@ struct PillCounterInputField: View {
             if let imageName = imageName {
                 Image(imageName)
                     .resizable()
-                    .scaledToFit()
+                    .scaledToFit() 
                     .frame(width: 20, height: 20)
                     .padding(.leading, 15)
                     .foregroundColor(appColors.secondary)

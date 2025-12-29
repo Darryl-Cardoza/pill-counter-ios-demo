@@ -13,7 +13,9 @@ struct UserProfileScreen: View {
     @EnvironmentObject private var userViewModel: UserViewModel
     @EnvironmentObject private var router: Router
     @EnvironmentObject private var appColors: AppColors
-    
+
+    @State private var showDeleteConfirmation: Bool = false
+
     @AppStorage(AppStorageManager.AppStorageKeys.isNewUser) var isNewUser:
         Bool = true
 
@@ -46,12 +48,12 @@ struct UserProfileScreen: View {
                 showHamburgerMenu: false,
                 title: NSLocalizedString("PROFILE", comment: "")
             )
-            
+
             if userViewModel.isLoading {
                 ZStack {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
-                    
+
                     PillCountingLoader()
                 }
             }
@@ -61,9 +63,121 @@ struct UserProfileScreen: View {
                 await userViewModel.getUser()
             }
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
+        .customPopup(isPresented: $showDeleteConfirmation) {
+            deleteConfirmation
+        }
+    }
+
+    private var deleteConfirmation: some View {
+        ConfirmationDialogue(
+            title: NSLocalizedString("CONFIRM DELETE", comment: ""),
+            message: NSLocalizedString(
+                "Are you sure you want to delete your profile? This action cannot be undone.",
+                comment: ""
+            ),
+            cancelButtonText: NSLocalizedString("CANCEL", comment: ""),
+            confirmButtonText: NSLocalizedString("DELETE", comment: ""),
+            onCancel: {
+                showDeleteConfirmation = false
+            },
+            onConfirm: {
+                showDeleteConfirmation = false
+                Task {
+                    await userViewModel.deleteUserProfile()
+
+                    router.setRoot(to: .authentication(.login(.LoginEmail)))
+                }
+            }
+        )
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder), to: nil, from: nil,
+            for: nil)
     }
 
     private var leftProfileColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(NSLocalizedString("FIRST_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.firstName,
+                validation: .name,
+                maxLength: 30
+            )
+
+            Text(NSLocalizedString("PHARMACY_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.pharmacyName,
+                validation: .none
+            )
+
+            Text(NSLocalizedString("EMAIL", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: true,
+                text: $userViewModel.email
+            )
+        }
+    }
+
+    private var rightProfileColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(NSLocalizedString("LAST_NAME", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.lastName,
+                validation: .name,
+                maxLength: 30
+            )
+
+            Text(NSLocalizedString("PHONE_NUMBER", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.phoneNumber,
+                keyboardType: .phonePad,
+                validation: .phone
+            )
+
+            Text(NSLocalizedString("NPI_ID", comment: ""))
+                .foregroundStyle(appColors.text)
+
+            PillCounterInputField(
+                imageName: nil,
+                placeholder: "",
+                disabled: false,
+                text: $userViewModel.npiID,
+                keyboardType: .phonePad,
+                validation: .phone
+            )
+        }
+    }
+
+    private var potraitProfileColums: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(NSLocalizedString("FIRST_NAME", comment: ""))
                 .foregroundStyle(appColors.text)
@@ -99,11 +213,7 @@ struct UserProfileScreen: View {
                 text: $userViewModel.pharmacyName,
                 validation: .none
             )
-        }
-    }
 
-    private var rightProfileColumn: some View {
-        VStack(alignment: .leading, spacing: 10) {
             Text(NSLocalizedString("PHONE_NUMBER", comment: ""))
                 .foregroundStyle(appColors.text)
 
@@ -140,92 +250,126 @@ struct UserProfileScreen: View {
         }
     }
 
-    private var actionButtons: some View {
-        HStack {
-            ForEach(["DELETE", "SKIP", "SAVE"], id: \.self) { title in
-                PillCountingButton(
-                    iconName: nil,
-                    title: NSLocalizedString(title, comment: ""),
-                    textColor: title != "SAVE"
-                        ? appColors.primary : appColors.text,
-                    backgroundColor: title != "SAVE"
-                        ? .clear : appColors.primary,
-                    borderColor: title != "SAVE"
-                        ? appColors.primary : .clear,
-                    font: .system(size: 16, weight: .semibold),
-                    cornerRadius: 40,
-                    horizontalPadding: 22,
-                    verticalPadding: 15,
-                    iconSize: 24,
-                    action: {
-                        handleActionButtonTap(title)
-                    }
-                )
-                // ensure each button takes equal space
-                .frame(maxWidth: .infinity)
-            }
+    private var landscapeProfileColums: some View {
+        HStack(alignment: .top, spacing: 12) {
+            leftProfileColumn
+            rightProfileColumn
         }
     }
 
-    private func handleActionButtonTap(_ title: String) {
-        switch title {
-        case "DELETE":
-            print("🗑 DELETE tapped")
-        // handle delete logic
-        case "SKIP":
-            print("✏️ EDIT tapped")
-            router.navigateBack()
-        // handle enabling edit mode
-        case "SAVE":
-            print("💾 SAVE tapped")
-            Task {
-                await userViewModel.updateUserProfile()
+    private var actionButtons: some View {
+        EqualWidthHStackButtons(spacing: 16) {
 
-                if userViewModel.isProfileUpdated {
-                    // setting the is new user as false for new user redirections.
-                    isNewUser = false
-                    userViewModel.isProfileUpdated = false
-                    router.navigateBack()
-                }
+            // DELETE
+            PillCountingButton(
+                iconName: nil,
+                title: NSLocalizedString("DELETE", comment: ""),
+                textColor: appColors.primary,
+                backgroundColor: .clear,
+                borderColor: appColors.primary,
+                font: .system(size: 16, weight: .semibold),
+                cornerRadius: 40,
+                horizontalPadding: 22,
+                verticalPadding: 15,
+                iconSize: 24,
+                action: onDeleteTapped
+            )
+
+            // SKIP
+            PillCountingButton(
+                iconName: nil,
+                title: NSLocalizedString("SKIP", comment: ""),
+                textColor: appColors.primary,
+                backgroundColor: .clear,
+                borderColor: appColors.primary,
+                font: .system(size: 16, weight: .semibold),
+                cornerRadius: 40,
+                horizontalPadding: 22,
+                verticalPadding: 15,
+                iconSize: 24,
+                action: onSkipTapped
+            )
+
+            // SAVE
+            PillCountingButton(
+                iconName: nil,
+                title: NSLocalizedString("SAVE", comment: ""),
+                textColor: appColors.text,
+                backgroundColor: appColors.primary,
+                borderColor: .clear,
+                font: .system(size: 16, weight: .semibold),
+                cornerRadius: 40,
+                horizontalPadding: 22,
+                verticalPadding: 15,
+                iconSize: 24,
+                action: onSaveTapped
+            )
+        }
+    }
+
+    private func onDeleteTapped() {
+        print("🗑 DELETE tapped")
+        showDeleteConfirmation = true
+    }
+
+    private func onSkipTapped() {
+        print("⏭ SKIP tapped")
+        router.navigateBack()
+    }
+
+    private func onSaveTapped() {
+        print("💾 SAVE tapped")
+
+        Task {
+            await userViewModel.updateUserProfile()
+
+            if userViewModel.isProfileUpdated {
+                // New user flow completed
+                isNewUser = false
+                userViewModel.isProfileUpdated = false
+                router.navigateBack()
             }
-        default:
-            break
         }
     }
 
     private func profileScreenLandscape() -> some View {
         VStack(spacing: 20) {
             Spacer().frame(height: SafeAreaInsets.top + 20)
-            HStack(alignment: .top, spacing: 12) {
-                leftProfileColumn
+            landscapeProfileColums
+                .padding(.horizontal)
 
-                rightProfileColumn
+            HStack {
+                Spacer()
+                actionButtons
+                Spacer()
             }
             .padding(.horizontal)
 
-            actionButtons
-                .padding(.horizontal)
-
         }
         .padding(.horizontal, SafeAreaInsets.leading)
+        .keyboardAdaptive()
     }
 
     private func profileScreenPotrait() -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Spacer().frame(height: 100)
-            leftProfileColumn
-            rightProfileColumn
+
+            potraitProfileColums
+
             Spacer()
 
-            actionButtons
-                .padding(.horizontal)
-                .padding(.bottom)
-                .frame(maxWidth: .infinity)
-
+            HStack {
+                Spacer()
+                actionButtons
+                Spacer()
+            }
+            .padding(.bottom)
         }
-        .background(appColors.primaryBackground)
         .padding(.horizontal)
+        .background(appColors.primaryBackground)
+        .keyboardAdaptive()
     }
+
 }
 
 #Preview {

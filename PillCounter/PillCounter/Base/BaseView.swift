@@ -26,6 +26,10 @@ struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: Vie
     let confirmMessage: String?
     let cancelButtonText: String?
     let confirmButtonText: String?
+    
+    // MARK: - OPTIONAL BACKGROUND STYLES
+    let backButtonBackground: Color?
+    let headerActionsBackground: Color?
 
     // MARK: - ENVIRONMENT
     @EnvironmentObject private var router: Router
@@ -45,7 +49,9 @@ struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: Vie
         confirmTitle: String? = nil,
         confirmMessage: String? = nil,
         cancelButtonText: String? = nil,
-        confirmButtonText: String? = nil
+        confirmButtonText: String? = nil,
+        backButtonBackground: Color? = nil,
+        headerActionsBackground: Color? = nil
     ) {
         self.topRatio = topRatio
         self.topContent = topContent
@@ -59,6 +65,8 @@ struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: Vie
         self.confirmMessage = confirmMessage
         self.cancelButtonText = cancelButtonText
         self.confirmButtonText = confirmButtonText
+        self.backButtonBackground = backButtonBackground
+        self.headerActionsBackground = headerActionsBackground
     }
 
     // MARK: - BODY
@@ -166,7 +174,7 @@ extension BaseView {
                 .padding(
                     .top,
                     isLandscape
-                        ? 10
+                        ? 0
                         : max(geometry.safeAreaInsets.top + 10, 40)
                 )
                 .frame(
@@ -181,6 +189,11 @@ extension BaseView {
 
                 // Inject the custom actions here
                 headerActions()
+                    .background(
+                        headerActionsBackground ?? Color.clear
+                    )
+                    .clipShape(Circle())
+                    .padding(6)
 
                 if showHamburgerMenu {
                     hamburgerMenuButton
@@ -193,8 +206,8 @@ extension BaseView {
             .padding(
                 .top,
                 isLandscape
-                    ? 10
-                    : max(geometry.safeAreaInsets.top + 10, 40)
+                    ? 0
+                    : max(geometry.safeAreaInsets.top + 5, 40)
             )
             .frame(
                 maxWidth: .infinity,
@@ -216,8 +229,13 @@ extension BaseView {
                 Image("back_icon")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 28, height: 28)
-                    .padding(12) // Height = 28 + 12 + 12 = 52
+                    .frame(width: 24, height: 24)
+                    .padding(12)
+                    .background(
+                        backButtonBackground ?? Color.clear
+                    )
+                    .clipShape(Circle())
+                    .padding(6)
 
                 Text(title.uppercased())
                     .foregroundStyle(AppColors.shared.text)
@@ -259,7 +277,6 @@ extension BaseView {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 28, height: 28)
-                // FIX: Increased padding to 12 to match Back Button symmetry
                 .padding(12)
         }
         .transition(.opacity)
