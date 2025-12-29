@@ -20,7 +20,7 @@ struct AppNavigation: View {
                     if isLoggedIn {
                         DashboardView()
                     } else {
-                        HistoryTransactionDetailView()
+                        LoginEmailView()
                     }
                 }
                 .navigationDestination(for: PillCounterFlow.self) {
