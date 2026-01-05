@@ -35,6 +35,7 @@ struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: Vie
     @EnvironmentObject private var router: Router
     @EnvironmentObject private var confirmationDialogueManager: ConfirmationDialogueManager
     @Environment(\.isLandscape) private var isLandscape
+    @EnvironmentObject private var appColors: AppColors
 
     // MARK: - MAIN INIT
     init(
@@ -94,7 +95,7 @@ struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: Vie
                 }
             }
         }
-        .background(AppColors.shared.secondaryBackground)
+        .background(appColors.secondaryBackground)
         .ignoresSafeArea()
         .environment(\.dynamicTypeSize, .medium)
     }
@@ -170,7 +171,7 @@ extension BaseView {
                 HStack {
                     backButton
                 }
-                .padding(.leading, 8)
+//                .padding(.leading, 8)
                 .padding(
                     .top,
                     isLandscape
@@ -189,17 +190,13 @@ extension BaseView {
 
                 // Inject the custom actions here
                 headerActions()
-                    .background(
-                        headerActionsBackground ?? Color.clear
-                    )
-                    .clipShape(Circle())
-                    .padding(6)
+//                    .padding(6)
 
                 if showHamburgerMenu {
                     hamburgerMenuButton
                 }
             }
-            .padding(.trailing, 16)
+//            .padding(.trailing, 8)
             // FIX: Force height to 52 to match the Left Side Back Button (28px + 12px padding * 2)
             // This ensures vertical centering aligns perfectly
             .frame(height: 52)
@@ -207,7 +204,7 @@ extension BaseView {
                 .top,
                 isLandscape
                     ? 0
-                    : max(geometry.safeAreaInsets.top + 5, 40)
+                    : max(geometry.safeAreaInsets.top + 10, 40)
             )
             .frame(
                 maxWidth: .infinity,
@@ -235,10 +232,9 @@ extension BaseView {
                         backButtonBackground ?? Color.clear
                     )
                     .clipShape(Circle())
-                    .padding(6)
 
                 Text(title.uppercased())
-                    .foregroundStyle(AppColors.shared.text)
+                    .foregroundStyle(appColors.text)
                     .font(.headline)
             }
         }

@@ -118,6 +118,9 @@ struct QRBarcodeScannerView: View {
                                     .scaledToFit()
                                     .frame(width: 15, height: 15)
                             }
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .padding(6)
                     }
                     .zIndex(10)
                 },
@@ -407,7 +410,7 @@ extension QRBarcodeScannerView {
                 PillCountingButton(
                     iconName: nil,
                     title: "OK",
-                    textColor: appColors.text,
+                    textColor: Color.white,
                     backgroundColor: appColors.primary,
                     borderColor: .clear,
                     font: .system(size: 12, weight: .regular),
@@ -495,7 +498,7 @@ extension QRBarcodeScannerView {
                 PillCountingButton(
                     iconName: nil,
                     title: "OK",
-                    textColor: appColors.text,
+                    textColor: Color.white,
                     backgroundColor: appColors.primary,
                     borderColor: .clear,
                     font: .system(size: 12, weight: .regular),
@@ -509,6 +512,12 @@ extension QRBarcodeScannerView {
                         
                         guard joinedTargetCount.count == 4 else {
                             // nothing entered OR partially entered
+                            return
+                        }
+                        
+                        guard let targetValue = Int(joinedTargetCount),
+                              targetValue > 0 else {
+                            // Target count is 0 (e.g. "0000") or invalid
                             return
                         }
                         

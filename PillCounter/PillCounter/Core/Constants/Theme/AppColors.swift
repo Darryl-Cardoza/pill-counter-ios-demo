@@ -9,15 +9,26 @@ import SwiftUI
 
 @MainActor
 final class AppColors: ObservableObject {
+
     static let shared = AppColors()
 
+    // MARK: - State
     @Published private var colorScheme: AppColorScheme?
+    @Published var isDarkMode: Bool = false
 
     private init() {}
+
+    // MARK: - Public API
 
     /// Set color scheme from API response
     func update(with scheme: AppColorScheme?) {
         self.colorScheme = scheme
+    }
+
+    /// Called when system Light/Dark mode changes
+    func updateSystemAppearance(_ isDark: Bool) {
+        guard isDarkMode != isDark else { return }
+        isDarkMode = isDark
     }
 
     // MARK: - Helpers
@@ -27,11 +38,11 @@ final class AppColors: ObservableObject {
     }
 
     private var currentPalette: AppColorPalette? {
-        let isDarkMode = UITraitCollection.current.userInterfaceStyle == .dark
-        return isDarkMode ? colorScheme?.dark : colorScheme?.light
+        isDarkMode ? colorScheme?.dark : colorScheme?.light
     }
 
-    // MARK: - Public Getters
+    // MARK: - Colors
+
     var primary: Color {
         hexColor(currentPalette?.primary, fallback: "01BBD3")
     }
@@ -41,53 +52,44 @@ final class AppColors: ObservableObject {
     }
 
     var tertiary: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "FFFFFF" : "333333"
+        let fallback = isDarkMode ? "FFFFFF" : "333333"
         return hexColor(currentPalette?.tertiary, fallback: fallback)
     }
 
     var primaryBackground: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "333333" : "EDEEEE"
+        let fallback = isDarkMode ? "333333" : "EDEEEE"
         return hexColor(currentPalette?.primaryBackground, fallback: fallback)
     }
 
     var secondaryBackground: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "191919" : "FFFFFF"
+        let fallback = isDarkMode ? "191919" : "FFFFFF"
         return hexColor(currentPalette?.secondaryBackground, fallback: fallback)
     }
 
     var text: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "EDEEEE" : "666666"
+        let fallback = isDarkMode ? "EDEEEE" : "666666"
         return hexColor(currentPalette?.textColor, fallback: fallback)
     }
 
     var inputBackground: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "191919" : "FFFFFF"
+        let fallback = isDarkMode ? "191919" : "FFFFFF"
         return hexColor(currentPalette?.inputBackground, fallback: fallback)
     }
 
     var statusChipBackgroundOnPrimary: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "191919" : "FFFFFF"
+        let fallback = isDarkMode ? "191919" : "FFFFFF"
         return hexColor(
-            currentPalette?.statusChipBackgroundOnPrimary, fallback: fallback)
+            currentPalette?.statusChipBackgroundOnPrimary,
+            fallback: fallback
+        )
     }
 
     var statusChipBackgroundOnSecondary: Color {
-        let fallback =
-            UITraitCollection.current.userInterfaceStyle == .dark
-            ? "333333" : "F5F4F4"
+        let fallback = isDarkMode ? "333333" : "F5F4F4"
         return hexColor(
-            currentPalette?.statusChipBackgroundOnSecondary, fallback: fallback)
+            currentPalette?.statusChipBackgroundOnSecondary,
+            fallback: fallback
+        )
     }
 }
+

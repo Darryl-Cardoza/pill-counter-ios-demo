@@ -67,8 +67,6 @@ final class CameraService: NSObject, ObservableObject {
         start()
         isPausedDueToInactivity = false
         resetInactivityTimer()
-
-        print("📷 Camera resumed")
     }
 
 

@@ -49,6 +49,7 @@ struct HistoryTransactionDetailView: View {
                                     .resizable()
                                     .scaledToFit()
                             )
+                            .padding(.trailing)
                     }
                 },
                 showBackButton: true,
@@ -66,6 +67,10 @@ struct HistoryTransactionDetailView: View {
             }
         }
         .onAppear {
+            
+            if pillScanViewModel.currentTransaction != nil {
+                transaction = pillScanViewModel.currentTransaction
+            }
             // This is for loading dummy transaction for testing purposes.
             // Load specific details if necessary
 //            if pillScanViewModel.currentTransaction == nil {
@@ -524,7 +529,7 @@ struct DeleteOkButtons: View {
             PillCountingButton(
                 iconName: nil,
                 title: "OK",
-                textColor: appColors.text,
+                textColor: Color.white,
                 backgroundColor: appColors.secondary,
                 borderColor: .clear,
                 font: .system(size: 14, weight: .semibold),

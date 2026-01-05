@@ -10,6 +10,7 @@ import SwiftUI  // neccessary to import for app storage
 
 @MainActor  // decalaring this as an main actor since we will change the colors on the app launch.
 class UserViewModel: ObservableObject {
+    // MARK: - APP STORAGE
     // get the access token from the app storage
     @AppStorage(AppStorageManager.AppStorageKeys.accessToken) var accessToken:
         String = ""
@@ -19,6 +20,7 @@ class UserViewModel: ObservableObject {
         String = ""
     @AppStorage(AppStorageManager.AppStorageKeys.userId) var userID: String = ""
 
+    // MARK: PUBLISHED VARIABLES
     // general loading
     @Published var isLoading: Bool = false
 
@@ -67,6 +69,7 @@ class UserViewModel: ObservableObject {
     // maintenance
     @Published var isMaintenance: Bool = false
 
+    // MARK: DATABASE
     // get the user db
     let userLocalDB = UserLocalDataSource.shared
 
@@ -123,8 +126,26 @@ class UserViewModel: ObservableObject {
     func getUser() async {
 
         isLoading = true
-
+        
         defer { isLoading = false }
+        
+        if !userID.isEmpty,
+           let localUser = userLocalDB.getUserByUserId(by: userID) {
+            
+            let name = Formatter.segregateName(from: localUser.name ?? "")
+            
+            // Populate UI from local DB
+            firstName = name.firstName
+            lastName = name.lastName
+            
+            email = localUser.email ?? ""
+            pharmacyName = localUser.pharmacy_name ?? ""
+            npiID = localUser.npi_id ?? ""
+            
+            getAllTransactionsAndFilterByCountType()
+            
+            return
+        }
 
         do {
 
@@ -151,8 +172,6 @@ class UserViewModel: ObservableObject {
                 // save the user id to app storage.
                 userID = getUserResult.data?.profile?.userId ?? ""
 
-                print(userID)
-
                 // save to db only if the user that has logged in is not present.
                 // condition : getting the user id from the response of the api.
                 // if the user with the user id is not there in the db then save the user in db
@@ -173,17 +192,16 @@ class UserViewModel: ObservableObject {
     // private func for profile screen fields
     private func populateEditableFields(from user: UserProfile) {
         let fullName = user.fullName ?? ""
-        let nameParts = fullName.split(separator: " ", maxSplits: 1)
-
-        firstName = nameParts.first.map(String.init) ?? ""
-        lastName = nameParts.count > 1 ? String(nameParts[1]) : ""
+        let name = Formatter.segregateName(from: fullName)
+        
+        firstName = name.firstName
+        lastName = name.lastName
 
         email = user.email ?? ""
         phoneNumber = user.phoneNumber ?? ""
         pharmacyName = user.pharmacyName ?? ""
         npiID = user.npiID ?? ""
 
-        // Also store fullName (optional, if you use it elsewhere)
         self.fullName = fullName
     }
 
@@ -334,6 +352,23 @@ class UserViewModel: ObservableObject {
         } else {
             await getAllPartialTransactions(countType: .REGULAR)
         }
+    }
+    
+    // MARK: - SOFT DELETE ALL TRANSACTIONS FOR A DATE
+    func softDeleteTransactionsForSelectedDate(
+        selectedDate: Date
+    ) async {
+
+        let transactionsToDelete = filteredTransactionsOfUserByDate
+
+        guard !transactionsToDelete.isEmpty else { return }
+
+        for txn in transactionsToDelete {
+            pillLocalDB.softDeleteTransaction(txnId: txn.txn_id)
+        }
+
+        // Refresh UI after deletion
+        await getTransactionsByDate(selectedDate: selectedDate)
     }
 
     // MARK: - FORCE COMPLETE TRANSACTION

@@ -15,7 +15,7 @@ final class PillDetector {
     static let shared = PillDetector()
 
     // model
-    private(set) var model: best_2?
+    private(set) var model: best?
 
     private init() {
         print("🔄 PillDetector.init called")
@@ -31,7 +31,7 @@ final class PillDetector {
             
             config.computeUnits = .cpuAndGPU
             
-            let mlModel = try best_2(configuration: config)
+            let mlModel = try best(configuration: config)
             self.model = mlModel
             print("✅ MODEL LOADED SUCCESSFULLY")
 

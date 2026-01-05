@@ -179,6 +179,7 @@ struct CountHistoryView: View {
                                     .foregroundStyle(appColors.secondary)
                             }
                         }
+                        .padding(.trailing, 16)
                         .transition(.opacity)
                     }
                 },
@@ -346,6 +347,8 @@ struct CountHistoryView: View {
                         .foregroundColor(appColors.primary)
                         .font(.system(size: 20))
                         .rotationEffect(.degrees(90))
+                        .frame(width: 20, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -399,7 +402,7 @@ struct CountHistoryView: View {
 
     // MARK: - MENU OPTIONS (Existing)
     private var menuOptions: some View {
-        VStack(alignment: .leading, spacing: 25) {
+        VStack(alignment: .leading, spacing: 15) {
             Text("SELECT OPTIONS")
                 .foregroundStyle(appColors.text)
                 .font(.system(size: 18, weight: .bold))
@@ -437,7 +440,7 @@ struct CountHistoryView: View {
                 PillCountingButton(
                     iconName: nil,
                     title: "OK",
-                    textColor: appColors.text,
+                    textColor: Color.white,
                     backgroundColor: appColors.primary,
                     borderColor: .clear,
                     font: .system(size: 12, weight: .regular),

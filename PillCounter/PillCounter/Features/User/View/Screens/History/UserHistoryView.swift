@@ -86,7 +86,12 @@ struct UserHistoryView: View {
                 showDeleteConfirmation = false
             } onConfirm: {
                 // delete all the transactions for that date.
-                print("Yes button clicked.")
+                Task {
+                    await userViewModel.softDeleteTransactionsForSelectedDate(
+                        selectedDate: selectedDate
+                    )
+                    showDeleteConfirmation = false
+                }
             }
 
         }
@@ -242,24 +247,7 @@ struct TransactionRow: View {
         HStack(spacing: 16) {
 
             // Image placeholder or Actual Image
-            if let path = txn.barcode_image,
-                let uiImage = loadImage(from: path)
-            {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 80, height: 60)
-                    .cornerRadius(8)
-                    .clipped()
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 80, height: 60)
-                    .overlay(
-                        Image(systemName: "pill.circle.fill")
-                            .foregroundColor(.gray)
-                    )
-            }
+            ThumbnailImageView(imagePath: txn.barcode_image, width: 80, height: 60)
 
             VStack(alignment: .leading, spacing: 4) {
 

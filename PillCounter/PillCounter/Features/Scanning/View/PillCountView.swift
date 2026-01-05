@@ -38,6 +38,9 @@ struct OPillCountView: View {
     @State private var isZeroOrTargetNotReached: Bool = false
     
     @State private var isPaused: Bool = false
+    
+    @State private var showFullScreenImage = false
+    @State private var fullScreenImage: Image?
 
     // MARK: - BODY
     var body: some View {
@@ -49,6 +52,7 @@ struct OPillCountView: View {
                 topContent: {
                     // Using .id ensures SwiftUI recognizes this as a persistent view
                     CameraContentView(cameraService: cameraService)
+                        .environment(\.colorScheme, .light)
                         .id("camera-content")
                         .overlay(rotationObserver)
                         .onTapGesture {
@@ -139,6 +143,14 @@ struct OPillCountView: View {
         .customPopup(isPresented: $showZeroCountPopup) {
             zeroCountPopupContent
         }
+        .fullScreenCover(isPresented: $showFullScreenImage) {
+            FullScreenImageView(
+                image: fullScreenImage,
+                onDismiss: {
+                    showFullScreenImage = false
+                }
+            )
+        }
     }
 }
 
@@ -159,7 +171,7 @@ extension OPillCountView {
                     } label: {
                         Text("Resume")
                             .font(.headline)
-                            .foregroundColor(appColors.text)
+                            .foregroundColor(Color.white)
                             .padding(.horizontal, 32)
                             .padding(.vertical, 20)
                             .background(appColors.secondary)
@@ -300,7 +312,7 @@ extension OPillCountView {
             PillCountingButton(
                 iconName: nil,
                 title: "OK",
-                textColor: appColors.text,
+                textColor: Color.white,
                 backgroundColor: appColors.primary,
                 borderColor: .clear,
                 font: .system(size: 14, weight: .semibold),
@@ -338,13 +350,19 @@ extension OPillCountView {
             // Content (Image + Count)
             HStack(spacing: 30) {
                 if let image = selectedTransactionDetail?.image_path,
-                    let loadedImage = PhotoFileManager.shared.loadImage(
-                        from: image)
-                {
-                    loadedImage.resizable().scaledToFit().frame(
-                        width: 100,
-                        height: 80
-                    )
+                   let loadedImage = PhotoFileManager.shared.loadImage(from: image) {
+
+                    loadedImage
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 140, height: 120)
+                        .clipped()
+                        .cornerRadius(12)
+                        .onTapGesture {
+                            fullScreenImage = loadedImage
+                            showFullScreenImage = true
+                        }
+
                 } else {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(appColors.text.opacity(0.5), lineWidth: 1)
@@ -352,14 +370,14 @@ extension OPillCountView {
                 }
 
                 VStack(spacing: 10) {
-                    Text("PILLS COUNT").foregroundStyle(appColors.secondary)
+                    Text("PILLS COUNT").foregroundStyle(appColors.primary)
                     CircleBadge(
                         size: 50,
                         strokeWidth: 0,
                         outerColor: .clear,
                         innerColor: appColors.secondary,
                         text: "\(selectedTransactionDetail?.pill_count ?? 0)",
-                        textColor: appColors.text,
+                        textColor: Color.white,
                         font: .system(size: 18, weight: .bold),
                         isAnimated: false
                     )
@@ -376,9 +394,9 @@ extension OPillCountView {
                 PillCountingButton(
                     iconName: nil,
                     title: "DELETE",
-                    textColor: appColors.secondary,
+                    textColor: appColors.primary,
                     backgroundColor: .clear,
-                    borderColor: appColors.secondary,
+                    borderColor: appColors.primary,
                     font: .system(size: 12, weight: .semibold),
                     cornerRadius: 30,
                     horizontalPadding: 32,
@@ -396,9 +414,9 @@ extension OPillCountView {
                 PillCountingButton(
                     iconName: nil,
                     title: "OK",
-                    textColor: appColors.text,
-                    backgroundColor: appColors.secondary,
-                    borderColor: appColors.secondary,
+                    textColor: Color.white,
+                    backgroundColor: appColors.primary,
+                    borderColor: appColors.primary,
                     font: .system(size: 12, weight: .semibold),
                     cornerRadius: 30,
                     horizontalPadding: 32,
@@ -542,5 +560,34 @@ extension OPillCountView {
             }
         }
         .frame(width: 250)
+    }
+}
+
+struct FullScreenImageView: View {
+    let image: Image?
+    let onDismiss: () -> Void
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            image?
+                .resizable()
+                .scaledToFit()
+                .ignoresSafeArea()
+            
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white)
+                            .padding()
+                    }
+                }
+                Spacer()
+            }
+        }
     }
 }

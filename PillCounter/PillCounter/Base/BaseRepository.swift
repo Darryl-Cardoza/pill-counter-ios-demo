@@ -22,9 +22,6 @@ protocol BaseRepositoryProtocol {
 }
 
 extension BaseRepositoryProtocol {
-
-    // 🎛️ CONFIGURATION: Set to true to bypass SSL checks (Development Only)
-    // Matches Flutter's: static const bool _bypassSSLCertificate = true;
     static var shouldBypassSSL: Bool { return true }
 
     // MARK: - Perform Request

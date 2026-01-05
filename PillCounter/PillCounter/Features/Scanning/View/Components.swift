@@ -104,7 +104,7 @@ struct PortraitLayout: View {
     @Binding var isPaused: Bool
 
     var body: some View {
-        HStack(spacing: 30) {
+        HStack {
             CircleBadge(
                 size: 100,
                 strokeWidth: 3,
@@ -115,6 +115,7 @@ struct PortraitLayout: View {
                 font: .system(size: 24, weight: .bold),
                 isAnimated: !isPaused ? true : false
             )
+            .padding(.horizontal, 20)
 
             Spacer()
 
@@ -124,16 +125,16 @@ struct PortraitLayout: View {
                     Text(
                         "\(NSLocalizedString("TOTAL_PILL_COUNT", comment: "")) \(pillScanViewModel.getTotalPillCountOfCurrentTransaction())/\(pillScanViewModel.currentTransaction?.target_count ?? 0)"
                     )
-                    .font(.title)
+                    .font(.system(size: 22, weight: .regular))
                 } else {
                     Text(
                         "\(NSLocalizedString("TOTAL_PILL_COUNT", comment: "")) \(pillScanViewModel.getTotalPillCountOfCurrentTransaction())"
                     )
-                    .font(.title)
+                    .font(.system(size: 22, weight: .regular))
                 }
             }
+            Spacer()
         }
-        .padding(.horizontal, 50)
         .padding(.top, 20)
     }
 }
@@ -169,12 +170,12 @@ struct LandscapeLayout: View {
                 Text(
                     "\(NSLocalizedString("TOTAL_PILL_COUNT", comment: "")) \(pillScanViewModel.getTotalPillCountOfCurrentTransaction())/\(pillScanViewModel.currentTransaction?.target_count ?? 0)"
                 )
-                .font(.title)
+                .font(.system(size: 22, weight: .regular))
             } else {
                 Text(
                     "\(NSLocalizedString("TOTAL_PILL_COUNT", comment: "")) \(pillScanViewModel.getTotalPillCountOfCurrentTransaction())"
                 )
-                .font(.title)
+                .font(.system(size: 22, weight: .regular))
             }
         }
         .padding(.top, 20)
@@ -187,27 +188,55 @@ struct TransactionDetailsScrollView: View {
     let details: [PillCountTransactionDetailsEntity]
     let appColors: AppColors
     let onTap: (PillCountTransactionDetailsEntity) -> Void
-
+    
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
-                ForEach(details.indices, id: \.self) { index in
-                    let item = details[index]
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(appColors.statusChipBackgroundOnPrimary)
-                        .frame(width: 50, height: 50)
-                        .overlay(
-                            Text("\(item.pill_count)")
-                                .foregroundColor(appColors.secondary)
-                                .font(.headline)
-                        )
-                        .onTapGesture { onTap(item) }
+        GeometryReader { geo in
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        
+                        Spacer(minLength: 0)
+                        
+                        ForEach(details.indices, id: \.self) { index in
+                            let item = details[index]
+                            let isLast = index == details.count - 1
+                            
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(appColors.statusChipBackgroundOnPrimary)
+                                .frame(width: 50, height: 50)
+                                .overlay(
+                                    Text("\(item.pill_count)")
+                                        .foregroundColor(appColors.secondary)
+                                        .font(
+                                            isLast
+                                            ? .headline.bold()
+                                            : .headline
+                                        )
+                                )
+                                .id(index)
+                                .onTapGesture { onTap(item) }
+                        }
+                        
+                        Spacer(minLength: 0)
+                    }
+                    .frame(minWidth: geo.size.width)
+                    .padding(.horizontal)
+                }
+                .onChange(of: details.count) { _, newCount in
+                    guard newCount > 0 else { return }
+                    
+                    DispatchQueue.main.async {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            proxy.scrollTo(newCount - 1, anchor: .center)
+                        }
+                    }
                 }
             }
-            .padding(.horizontal)
         }
+        .frame(height: 60)
     }
 }
+
 
 // MARK: - ACTION BUTTONS
 struct ActionButtons: View {

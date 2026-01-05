@@ -257,7 +257,9 @@ struct HamburgerMenuView: View {
                 horizontalPadding: 0,
                 verticalPadding: 0,
                 iconSize: 16,
-                action: {},
+                action: {
+                    router.navigate(to: .authentication(.user(.userSettings(.History))))
+                },
                 iconColor: primaryIconColor
             )
             // Portrait: Button takes equal available space

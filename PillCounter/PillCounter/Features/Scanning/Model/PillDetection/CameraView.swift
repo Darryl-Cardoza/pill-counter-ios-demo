@@ -8,7 +8,10 @@
 import AVFoundation
 import SwiftUI
 
+// MARK: - Camera Preview Wrapper
+
 struct CameraView: UIViewRepresentable {
+
     let session: AVCaptureSession
     @ObservedObject var cameraService: CameraService
 
@@ -16,17 +19,35 @@ struct CameraView: UIViewRepresentable {
         let view = PreviewView()
         view.session = session
 
+        // Expose the preview layer to CameraService
         cameraService.previewLayer = view.previewLayer
 
         return view
     }
 
     func updateUIView(_ uiView: PreviewView, context: Context) {
-        // not doing anything over here.
+
+        // 1️⃣ Ensure the preview layer is always bound to the active session
+        if uiView.previewLayer.session !== session {
+            uiView.previewLayer.session = session
+        }
+
+        // 2️⃣ Ensure CameraService always holds the correct preview layer
+        if cameraService.previewLayer !== uiView.previewLayer {
+            cameraService.previewLayer = uiView.previewLayer
+        }
+
+        // 3️⃣ Re-assert preview configuration (can reset on trait changes)
+        uiView.previewLayer.videoGravity = .resizeAspectFill
+
+        // 4️⃣ Ensure correct sizing after SwiftUI invalidation
+        uiView.setNeedsLayout()
     }
 }
 
-class PreviewView: UIView {
+// MARK: - Preview View
+
+final class PreviewView: UIView {
 
     var session: AVCaptureSession? {
         didSet {
@@ -55,31 +76,42 @@ class PreviewView: UIView {
         super.layoutSubviews()
         previewLayer.frame = bounds
     }
+
+    /// Defensive rebinding in case SwiftUI detaches the session
+    func attachSessionIfNeeded() {
+        if previewLayer.session == nil {
+            previewLayer.session = session
+        }
+    }
 }
 
+// MARK: - Detection Overlay
+
 struct DetectionOverlay: View {
-    // We need the full service to access the previewLayer for conversion
+
     @ObservedObject var cameraService: CameraService
     @EnvironmentObject var appColors: AppColors
 
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { _ in
             ZStack(alignment: .topLeading) {
-                // If the preview layer isn't ready, we can't draw correctly yet
-                if cameraService.previewLayer != nil {
 
+                // Draw only when preview layer & session are valid
+                if
+                    let layer = cameraService.previewLayer,
+                    layer.session != nil
+                {
                     ForEach(
                         Array(cameraService.detections.enumerated()),
                         id: \.offset
                     ) { index, det in
 
-                        // 1. Convert ML coordinates to Screen coordinates using the Layer
-                        let screenRect = getScreenRect(for: det)
+                        let screenRect = getScreenRect(
+                            for: det,
+                            using: layer
+                        )
 
-                        // 3. Draw Badge (Calculate center based on the NEW screenRect)
                         let badgeSize: CGFloat = 20
-                        let badgeX = screenRect.midX
-                        let badgeY = screenRect.midY
 
                         ZStack {
                             Circle()
@@ -91,7 +123,10 @@ struct DetectionOverlay: View {
                                 .foregroundColor(appColors.text)
                         }
                         .frame(width: badgeSize, height: badgeSize)
-                        .position(x: badgeX, y: badgeY)
+                        .position(
+                            x: screenRect.midX,
+                            y: screenRect.midY
+                        )
                     }
                 }
             }
@@ -99,12 +134,13 @@ struct DetectionOverlay: View {
         .allowsHitTesting(false)
     }
 
-    // MARK: - Coordinate Math
-    private func getScreenRect(for det: DetectionResult) -> CGRect {
-        guard let layer = cameraService.previewLayer else { return .zero }
+    // MARK: - Coordinate Conversion
 
-        // 1. Normalize the coordinates (0.0 to 1.0) based on the IMAGE size (e.g. 1920x1080)
-        // This creates a rectangle relative to the camera sensor.
+    private func getScreenRect(
+        for det: DetectionResult,
+        using layer: AVCaptureVideoPreviewLayer
+    ) -> CGRect {
+
         let normalizedRect = CGRect(
             x: det.rect.origin.x / det.originalFrameSize.width,
             y: det.rect.origin.y / det.originalFrameSize.height,
@@ -112,13 +148,9 @@ struct DetectionOverlay: View {
             height: det.rect.height / det.originalFrameSize.height
         )
 
-        // 2. Ask the PreviewLayer to map that normalized rectangle to the View
-        //
-        // This function knows that in Portrait mode, the sides of the image are cropped out.
-        // It shifts the X/Y coordinates automatically to match the screen.
-        let convertedRect = layer.layerRectConverted(
-            fromMetadataOutputRect: normalizedRect)
-
-        return convertedRect
+        return layer.layerRectConverted(
+            fromMetadataOutputRect: normalizedRect
+        )
     }
 }
+

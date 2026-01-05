@@ -18,7 +18,7 @@ final class Letterbox {
 
     static var currentScaleInfo: ScaleInfo?
 
-    // 🔥 Convert camera frame → letterboxed 640×640 pixelBuffer
+    // Convert camera frame → letterboxed 640×640 pixelBuffer
     static func preprocess(_ px: CVPixelBuffer,
                            targetSize: Int) -> CVPixelBuffer? {
 

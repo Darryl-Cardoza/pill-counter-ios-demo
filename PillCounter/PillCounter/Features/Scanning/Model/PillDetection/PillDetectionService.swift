@@ -53,7 +53,7 @@ final class PillDetectionService {
         }
 
         // BUILD MODEL INPUT
-        let input = best_2Input(
+        let input = bestInput(
             image: resized,
             iouThreshold: iouThreshold,
             confidenceThreshold: confThreshold)

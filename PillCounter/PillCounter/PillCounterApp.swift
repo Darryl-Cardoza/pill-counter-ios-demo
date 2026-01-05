@@ -41,7 +41,7 @@ struct PillCounterApp: App {
             Group {
 
                 // 1️⃣ Security violation (highest priority)
-                if securityState.isSecure {
+                if !securityState.isSecure {
                     SecurityViolationView()
                         .environmentObject(appColors)
 

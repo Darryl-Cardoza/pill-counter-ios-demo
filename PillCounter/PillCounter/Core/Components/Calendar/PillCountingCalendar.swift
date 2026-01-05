@@ -134,6 +134,6 @@ struct PillCountingCalendar: View {
     }
     
     private func textColorFor(_ date: Date) -> Color {
-        isSameDay(date, selectedDate) ? appColors.text : textColor
+        isSameDay(date, selectedDate) ? Color.white : textColor
     }
 }

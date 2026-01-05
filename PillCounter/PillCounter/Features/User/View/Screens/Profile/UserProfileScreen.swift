@@ -289,7 +289,7 @@ struct UserProfileScreen: View {
             PillCountingButton(
                 iconName: nil,
                 title: NSLocalizedString("SAVE", comment: ""),
-                textColor: appColors.text,
+                textColor: Color.white,
                 backgroundColor: appColors.primary,
                 borderColor: .clear,
                 font: .system(size: 16, weight: .semibold),

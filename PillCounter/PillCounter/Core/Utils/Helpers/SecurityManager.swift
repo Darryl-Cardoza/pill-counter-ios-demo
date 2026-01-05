@@ -68,6 +68,11 @@ struct SecurityManager {
     /// Detects whether a debugger is attached to the running process.
     /// Commonly used to prevent runtime inspection and tampering.
     private static func isDebuggerAttached() -> Bool {
+
+        #if DEBUG
+            return false
+        #endif
+
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.size
 

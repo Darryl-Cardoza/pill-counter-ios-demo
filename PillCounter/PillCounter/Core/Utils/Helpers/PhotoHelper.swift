@@ -41,7 +41,6 @@ struct PhotoFileManager {
         // Write to disk
         do {
             try data.write(to: fileURL)
-            print("✅ Image saved: \(fileName)")
             return fileName
         } catch {
             print("❌ Error saving image to disk: \(error)")

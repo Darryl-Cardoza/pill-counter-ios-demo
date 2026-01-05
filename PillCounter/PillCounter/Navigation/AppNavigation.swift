@@ -11,6 +11,8 @@ struct AppNavigation: View {
     @EnvironmentObject private var router: Router
     @AppStorage(AppStorageManager.AppStorageKeys.isLoggedIn) var isLoggedIn:
         Bool = false
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var appColors: AppColors
 
     var body: some View {
         GeometryReader { geometry in
@@ -72,9 +74,10 @@ struct AppNavigation: View {
                     case .authentication(.user(.userSettings(.History))):
                         UserHistoryView()
                             .navigationBarBackButtonHidden(true)
-                        
+
                     // before navigating to this screen make sure to set the current transaction of the pill scan view model to the selected transaction.
-                    case .authentication(.user(.userSettings(.HistoryTransactionDetail))):
+                    case .authentication(
+                        .user(.userSettings(.HistoryTransactionDetail))):
                         HistoryTransactionDetailView()
                             .navigationBarBackButtonHidden(true)
 
@@ -82,6 +85,12 @@ struct AppNavigation: View {
                 }
             }
             .environment(\.isLandscape, isLandscape)
+        }
+        .onAppear {
+            appColors.updateSystemAppearance(colorScheme == .dark)
+        }
+        .onChange(of: colorScheme) { _, newValue in
+            appColors.updateSystemAppearance(newValue == .dark)
         }
     }
 }
