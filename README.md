@@ -1,242 +1,351 @@
+# MobRite Pill Counting Application — iOS
 
-# MobRite PillCounter iOS
+The **MobRite Pill Counting Application** is a professional iOS system designed to automate pharmaceutical pill counting workflows using camera-based detection, barcode scanning, and HL7 integration with pharmacy management systems.
 
-PillCounter is an **iOS pharmacy workflow application** designed to assist pharmacists in accurately **verifying medications, counting pills, and dispensing prescriptions** with minimal human error.
+The application enables pharmacists to perform **accurate pill counting, controlled drug verification, and transaction management** while maintaining secure communication with external healthcare infrastructure.
 
-The application integrates **barcode scanning, NDC validation, automated pill counting, controlled drug verification, and vial documentation** to ensure safe dispensing and compliance with pharmacy regulations.
-
-Built with **SwiftUI**, the system is optimized for modern pharmacy workflows and integrates with **Pharmacy Management Systems (PMS)**.
-
----
-
-# Key Features
-
-## Barcode / QR Code Scanning
-- Scan medication containers using **barcode, QR, or GTIN codes**
-- Decode and extract **NDC (National Drug Code)** information
-- Real-time validation of scanned drugs
-
-## NDC Verification
-- Compare scanned NDC with the **expected NDC from PMS**
-- Prevent dispensing incorrect medication
-- Error feedback when mismatch occurs
-
-## Pill Counting
-- Capture pill images using device camera
-- Automated pill detection and counting
-- Compare counted quantity with **prescribed quantity**
-
-## Controlled Drug Workflow
-For controlled substances the system adds additional safety steps:
-
-- Mandatory verification
-- Optional **double counting**
-- User confirmation steps
-- Audit trail support
-
-## Vial Capture Verification
-- Capture image of the final vial
-- Ensures correct labeling and packaging
-- Documentation for pharmacy compliance
-
-## Transaction Management
-- Each prescription runs as a **transaction**
-- Maintains workflow state across steps
-- Cleans state after completion or cancellation
+The system is built using **SwiftUI, MVVM architecture, and modular feature-based design** to ensure scalability, maintainability, and clear separation of concerns.
 
 ---
 
-# Workflow
+# System Overview
 
-## 1. Prescription Received
-Prescription data is received from the **Pharmacy Management System (PMS)** including:
+MobRite Pill Counter is part of the **MobRite pharmacy automation ecosystem**, designed to support:
 
-- Drug NDC
-- Prescribed pill count
-- Transaction information
+* Automated pill counting workflows
+* Prescription validation
+* Controlled substance verification
+* HL7 communication with pharmacy management systems
+* Secure pharmaceutical transaction tracking
 
-## 2. Medication Scan
-Pharmacist scans the medication container barcode.
-
-System extracts:
-- GTIN
-- NDC
-- Product identifier
-
-## 3. Drug Verification
-The scanned NDC is compared against the **expected PMS NDC**.
-
-Possible outcomes:
-- Valid drug → Continue workflow
-- Invalid drug → Display mismatch error
-
-## 4. Pill Counting
-The system captures pill images and performs automated counting.
-
-Two values are tracked:
-- **Target Count** → From PMS
-- **Detected Count** → From camera processing
-
-## 5. Controlled Drug Double Count (Optional)
-For certain schedules:
-
-- A second count is required
-- Both counts must match before proceeding
-
-## 6. Vial Image Capture
-Pharmacist captures image of filled vial for verification.
-
-## 7. Dispensing Complete
-The prescription is verified and ready for dispensing.
-
----
-
-# Tech Stack
-
-| Technology | Purpose |
-|--------|--------|
-| SwiftUI | User Interface |
-| AVFoundation | Camera & scanning |
-| CoreData | Local storage |
-| REST APIs | PMS integration |
-| Barcode Decoders | GTIN / NDC parsing |
+The system performs **on-device processing**, minimizing latency and ensuring reliability in pharmacy environments.
 
 ---
 
 # Architecture
 
-The app follows a **MVVM architecture**.
+The application follows a **modular MVVM architecture** combined with a **clean separation of infrastructure, domain logic, and UI layers**.
 
 ```
-
-View
-↓
-ViewModel
-↓
-Services
-↓
-Models / Storage
-
+Presentation Layer
+│
+├─ SwiftUI Views
+├─ Feature Screens
+└─ Reusable UI Components
+        │
+        ▼
+ViewModel Layer
+│
+├─ Screen State Management
+├─ UI Business Logic
+└─ Feature Coordination
+        │
+        ▼
+Repository Layer
+│
+├─ Data Aggregation
+├─ API Communication
+└─ Local Data Access
+        │
+        ▼
+Data Sources
+│
+├─ Local Storage
+├─ Secure Configuration
+└─ External System Communication
+        │
+        ▼
+Infrastructure Layer
+│
+├─ HL7 Messaging
+├─ Network Services
+├─ Security & Encryption
+└─ Application Utilities
 ```
+
+This structure ensures that:
+
+* UI remains independent from business logic
+* Features are isolated and maintainable
+* Infrastructure concerns remain centralized
 
 ---
 
 # Project Structure
 
 ```
-
 PillCounter
 │
-├── App
-│   ├── PillCounterApp.swift
-│   └── AppInitializer.swift
+├── Base
+│   ├── AppLogoutManager
+│   ├── BaseRepository
+│   └── BaseView
 │
-├── Views
-│   │
-│   ├── Scan
-│   │   ├── BarcodeScannerView.swift
-│   │   ├── CameraPreviewView.swift
-│   │   └── ScanOverlayView.swift
-│   │
-│   ├── Counting
-│   │   ├── PillCountingView.swift
-│   │   ├── PillCountingPreview.swift
-│   │   └── CountingResultView.swift
-│   │
-│   ├── ControlledDrug
-│   │   ├── ControlledStepView.swift
-│   │   ├── DoubleCountView.swift
-│   │   └── VerificationView.swift
-│   │
-│   ├── Vial
-│   │   ├── VialCaptureView.swift
-│   │   └── VialPreviewView.swift
+├── Core
 │   │
 │   ├── Components
-│   │   ├── ConfirmationDialogue.swift
-│   │   ├── PrimaryButton.swift
-│   │   └── StatusIndicator.swift
+│   │   ├── Button
+│   │   ├── Calendar
+│   │   ├── Checkbox
+│   │   ├── Confirmation
+│   │   ├── ConfirmationDialogue
+│   │   ├── InputField
+│   │   ├── Loader
+│   │   └── TextEditor
 │   │
-│   └── Shared
-│       └── LoadingView.swift
+│   ├── Config
+│   ├── Constants
+│   │
+│   ├── HL7
+│   │   ├── Network
+│   │   └── Service
+│   │
+│   └── Utils
 │
-├── ViewModels
+├── Features
 │   │
-│   ├── PillScanViewModel.swift
-│   ├── TransactionViewModel.swift
-│   └── UserViewModel.swift
-│
-├── Services
+│   ├── Login
 │   │
-│   ├── Camera
-│   │   ├── CameraService.swift
-│   │   └── CameraManager.swift
-│   │
-│   ├── Scanner
-│   │   ├── BarcodeScannerService.swift
-│   │   └── BarcodeDecoder.swift
-│   │
-│   ├── Network
-│   │   ├── APIClient.swift
-│   │   └── DrugValidationService.swift
-│   │
-│   └── PillDetection
-│       ├── PillDetectionService.swift
-│       └── ImageProcessing.swift
-│
-├── Models
-│   │
-│   ├── Drug
-│   │   └── DrugModel.swift
-│   │
-│   ├── Transaction
-│   │   ├── Transaction.swift
-│   │   └── TransactionDetails.swift
+│   ├── Scanning
+│   │   ├── LocalDataSource
+│   │   ├── Model
+│   │   │   └── ControlledDrug
+│   │   └── ViewModel
+│   │       ├── PillScanViewModel
+│   │       └── CameraViewModel
 │   │
 │   └── User
-│       └── UserModel.swift
+│       ├── Model
+│       │   ├── Request
+│       │   └── Response
+│       │
+│       ├── Repository
+│       │   ├── SettingsRepository
+│       │   ├── UserLocalDataSource
+│       │   └── UserRepository
+│       │
+│       ├── View
+│       └── ViewModel
+│           └── UserViewModel
 │
-├── Storage
-│   │
-│   ├── CoreDataStack.swift
-│   ├── PillsDataLocalStorage.swift
-│   └── TransactionStorage.swift
+├── Navigation
+│   ├── Router
+│   └── AppNavigation
 │
-├── Utilities
-│   │
-│   ├── AppColors.swift
-│   ├── Extensions.swift
-│   └── Logger.swift
+├── Assets
+├── Config
+├── Localizable
 │
-└── Resources
-├── Assets.xcassets
-├── Icons
-└── Localizable.strings
-
+├── PillCounterApp.swift
+├── SecurityViolationView
+│
+├── Tests
+│   ├── PillCounterTests
+│   └── PillCounterUITests
 ```
 
 ---
 
-# Error Handling
+# Core Modules
 
-The system includes safeguards for:
+## Base Layer
 
-- Invalid barcode scans
-- NDC mismatches
-- Camera capture failures
-- Network errors
-- Counting inconsistencies
+The **Base module** provides shared abstractions used across the application.
+
+Key responsibilities include:
+
+* Common view abstractions
+* Shared repository behavior
+* Application logout management
+
+This layer ensures consistent patterns across feature modules.
 
 ---
 
-# Security & Compliance
+# Core Infrastructure
 
-To maintain pharmacy safety standards:
+## Components
 
-- Controlled drug workflows enforce verification
-- NDC matching prevents incorrect dispensing
-- Transaction records provide audit capability
-- Vial images help maintain compliance
+Reusable SwiftUI components used throughout the application interface.
 
+Examples include:
 
+* Button components
+* Form inputs
+* Confirmation dialogs
+* Loaders
+* UI utilities
 
+These components ensure **consistent UI patterns and styling** across the system.
+
+---
+
+## Configuration
+
+The configuration layer manages:
+
+* Environment configuration
+* Application constants
+* Secure configuration files
+
+Sensitive configuration values are encrypted and loaded securely at runtime.
+
+---
+
+## HL7 Integration
+
+The HL7 module enables communication with **external pharmacy management systems**.
+
+### Network Layer
+
+Handles:
+
+* HL7 transport communication
+* Message delivery
+* External system connectivity
+
+### Service Layer
+
+Responsible for:
+
+* HL7 message construction
+* Message parsing
+* Processing inbound system messages
+
+This module enables the application to integrate with **pharmacy and hospital systems using healthcare interoperability standards**.
+
+---
+
+# Feature Modules
+
+Application functionality is organized using **feature-driven modules** to improve maintainability and scalability.
+
+---
+
+## Login
+
+Handles authentication and session management.
+
+Responsibilities include:
+
+* User login flow
+* Secure session initialization
+* Authentication state management
+
+---
+
+## Scanning
+
+The scanning module is responsible for **pill counting operations**.
+
+Key responsibilities include:
+
+* Camera lifecycle management
+* Pill detection workflow
+* Controlled drug validation
+* Transaction creation
+
+### Core Components
+
+**ViewModels**
+
+* `PillScanViewModel`
+* `CameraViewModel`
+
+These manage camera input, detection state, and transaction logic.
+
+**Models**
+
+* Controlled drug models
+* Scanning data models
+
+---
+
+## User Module
+
+The User module manages user-related data and application settings.
+
+### Data Models
+
+* API request models
+* API response models
+
+### Repositories
+
+* `UserRepository`
+* `SettingsRepository`
+* `UserLocalDataSource`
+
+These handle both **remote and local data sources**.
+
+### ViewModels
+
+* `UserViewModel`
+
+Responsible for user state and profile logic.
+
+---
+
+# Navigation
+
+Navigation is handled through a centralized routing system.
+
+```
+Navigation
+├── Router
+└── AppNavigation
+```
+
+Responsibilities include:
+
+* Application routing
+* Screen flow control
+* Navigation state management
+
+This approach prevents navigation logic from leaking into feature modules.
+
+---
+
+# Security
+
+Security is a critical component of the system due to healthcare and pharmaceutical requirements.
+
+Security features include:
+
+* Encrypted configuration files
+* Secure token storage
+* Session management
+* Runtime security validation
+
+The `SecurityViolationView` is responsible for handling potential security issues detected within the application.
+
+---
+
+# Testing
+
+The project includes both **unit tests and UI tests**.
+
+```
+PillCounterTests
+PillCounterUITests
+```
+
+Test coverage focuses on:
+
+* ViewModel logic
+* Business rules
+* Navigation behavior
+* UI interaction flows
+
+---
+
+# Organization
+
+Developed by **Rite Technologies**
+
+MobRite products focus on:
+
+* Pharmacy automation
+* Pill counting systems
+* Healthcare system integrations
+* HL7-based interoperability solutions
