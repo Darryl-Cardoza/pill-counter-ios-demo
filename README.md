@@ -1,5 +1,5 @@
 
-# PillCounter iOS
+# MobRite PillCounter iOS
 
 PillCounter is an **iOS pharmacy workflow application** designed to assist pharmacists in accurately **verifying medications, counting pills, and dispensing prescriptions** with minimal human error.
 
