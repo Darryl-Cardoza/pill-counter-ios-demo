@@ -1,0 +1,284 @@
+//
+//  BaseView.swift
+//  PillCounter
+//
+//  Created by HC on 31/10/25.
+//
+
+import SwiftUI
+
+struct BaseView<TopContent: View, BottomContent: View, HeaderActions: View>: View {
+
+    // MARK: - STORED CONTENT CLOSURES
+    let topRatio: CGFloat
+    let topContent: () -> TopContent
+    let bottomContent: () -> BottomContent
+    let headerActions: () -> HeaderActions
+
+    // MARK: - CONFIGURATION PROPERTIES
+    let showBackButton: Bool
+    let showHamburgerMenu: Bool
+    let title: String
+
+    // MARK: - CONFIRMATION PROPERTIES
+    let confirmBack: Bool
+    let confirmTitle: String?
+    let confirmMessage: String?
+    let cancelButtonText: String?
+    let confirmButtonText: String?
+    
+    // MARK: - OPTIONAL BACKGROUND STYLES
+    let backButtonBackground: Color?
+    let headerActionsBackground: Color?
+
+    // MARK: - ENVIRONMENT
+    @EnvironmentObject private var router: Router
+    @EnvironmentObject private var confirmationDialogueManager: ConfirmationDialogueManager
+    @Environment(\.isLandscape) private var isLandscape
+    @EnvironmentObject private var appColors: AppColors
+
+    // MARK: - MAIN INIT
+    init(
+        topRatio: CGFloat = 0.5,
+        @ViewBuilder topContent: @escaping () -> TopContent,
+        @ViewBuilder bottomContent: @escaping () -> BottomContent,
+        @ViewBuilder headerActions: @escaping () -> HeaderActions,
+        showBackButton: Bool = false,
+        showHamburgerMenu: Bool = false,
+        title: String = "",
+        confirmBack: Bool = false,
+        confirmTitle: String? = nil,
+        confirmMessage: String? = nil,
+        cancelButtonText: String? = nil,
+        confirmButtonText: String? = nil,
+        backButtonBackground: Color? = nil,
+        headerActionsBackground: Color? = nil
+    ) {
+        self.topRatio = topRatio
+        self.topContent = topContent
+        self.bottomContent = bottomContent
+        self.headerActions = headerActions
+        self.showBackButton = showBackButton
+        self.showHamburgerMenu = showHamburgerMenu
+        self.title = title
+        self.confirmBack = confirmBack
+        self.confirmTitle = confirmTitle
+        self.confirmMessage = confirmMessage
+        self.cancelButtonText = cancelButtonText
+        self.confirmButtonText = confirmButtonText
+        self.backButtonBackground = backButtonBackground
+        self.headerActionsBackground = headerActionsBackground
+    }
+
+    // MARK: - BODY
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // 1. ADAPTIVE LAYOUT (Handles Orientation)
+                adaptiveLayout(geometry: geometry)
+
+                // 2. OVERLAY CONTROLS (Back Button / Hamburger / Header Actions)
+                overlayControls(using: geometry)
+
+                // 3. GLOBAL CONFIRMATION POPUP
+                if confirmBack, confirmationDialogueManager.isShowing {
+                    Color.black.opacity(0.45)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            // Optional: Close on tap outside
+                        }
+
+                    confirmationDialogueManager.popupView
+                        .padding()
+                        .transition(.scale)
+                        .zIndex(100)
+                }
+            }
+        }
+        .background(appColors.secondaryBackground)
+        .ignoresSafeArea()
+        .environment(\.dynamicTypeSize, .medium)
+    }
+}
+
+// MARK: - CONVENIENCE EXTENSION
+extension BaseView where HeaderActions == EmptyView {
+    init(
+        topRatio: CGFloat = 0.5,
+        @ViewBuilder topContent: @escaping () -> TopContent,
+        @ViewBuilder bottomContent: @escaping () -> BottomContent,
+        showBackButton: Bool = false,
+        showHamburgerMenu: Bool = false,
+        title: String = "",
+        confirmBack: Bool = false,
+        confirmTitle: String? = nil,
+        confirmMessage: String? = nil,
+        cancelButtonText: String? = nil,
+        confirmButtonText: String? = nil
+    ) {
+        self.init(
+            topRatio: topRatio,
+            topContent: topContent,
+            bottomContent: bottomContent,
+            headerActions: { EmptyView() },
+            showBackButton: showBackButton,
+            showHamburgerMenu: showHamburgerMenu,
+            title: title,
+            confirmBack: confirmBack,
+            confirmTitle: confirmTitle,
+            confirmMessage: confirmMessage,
+            cancelButtonText: cancelButtonText,
+            confirmButtonText: confirmButtonText
+        )
+    }
+}
+
+// MARK: - LAYOUT BUILDERS
+extension BaseView {
+
+    @ViewBuilder
+    private func adaptiveLayout(geometry: GeometryProxy) -> some View {
+        let size = geometry.size
+
+        let layout =
+            isLandscape
+            ? AnyLayout(HStackLayout(spacing: 0))
+            : AnyLayout(VStackLayout(spacing: 0))
+
+        layout {
+            topContent()
+                .frame(
+                    width: isLandscape ? size.width * topRatio : size.width,
+                    height: isLandscape ? size.height : size.height * topRatio
+                )
+                .clipped()
+
+            bottomContent()
+                .frame(
+                    width: isLandscape
+                        ? size.width * (1 - topRatio) : size.width,
+                    height: isLandscape
+                        ? size.height : size.height * (1 - topRatio)
+                )
+        }
+    }
+
+    @ViewBuilder
+    private func overlayControls(using geometry: GeometryProxy) -> some View {
+        ZStack {
+            // 1. LEFT SIDE: Back Button
+            if showBackButton {
+                HStack {
+                    backButton
+                }
+//                .padding(.leading, 8)
+                .padding(
+                    .top,
+                    isLandscape
+                        ? 0
+                        : max(geometry.safeAreaInsets.top + 10, 40)
+                )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .topLeading
+                )
+            }
+
+            // 2. RIGHT SIDE: Header Actions + Hamburger
+            HStack(spacing: 16) {
+
+                // Inject the custom actions here
+                headerActions()
+//                    .padding(6)
+
+                if showHamburgerMenu {
+                    hamburgerMenuButton
+                }
+            }
+//            .padding(.trailing, 8)
+            // FIX: Force height to 52 to match the Left Side Back Button (28px + 12px padding * 2)
+            // This ensures vertical centering aligns perfectly
+            .frame(height: 52)
+            .padding(
+                .top,
+                isLandscape
+                    ? 0
+                    : max(geometry.safeAreaInsets.top + 10, 40)
+            )
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topTrailing
+            )
+        }
+    }
+}
+
+// MARK: - COMPONENT BUILDERS
+extension BaseView {
+
+    private var backButton: some View {
+        Button {
+            handleBackAction()
+        } label: {
+            HStack {
+                Image("back_icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+                    .padding(12)
+                    .background(
+                        backButtonBackground ?? Color.clear
+                    )
+                    .clipShape(Circle())
+
+                Text(title.uppercased())
+                    .foregroundStyle(appColors.text)
+                    .font(.headline)
+            }
+        }
+    }
+
+    private func handleBackAction() {
+        if confirmBack {
+            confirmationDialogueManager.showConfirmation {
+                confirmationPopup
+            } onConfirm: {
+                router.navigateBack()
+            }
+        } else {
+            router.navigateBack()
+        }
+    }
+
+    private var confirmationPopup: some View {
+        ConfirmationDialogue(
+            title: confirmTitle ?? "Confirmation",
+            message: confirmMessage ?? "Are you sure you want to go back?",
+            cancelButtonText: cancelButtonText ?? "NO",
+            confirmButtonText: confirmButtonText ?? "YES"
+        ) {
+            confirmationDialogueManager.hide()
+        } onConfirm: {
+            confirmationDialogueManager.confirm()
+        }
+    }
+
+    private var hamburgerMenuButton: some View {
+        Button {
+            router.navigate(to: .authentication(.user(.hamburgerMenu)))
+        } label: {
+            Image("hamburger_menu")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 28, height: 28)
+                .padding(12)
+        }
+        .transition(.opacity)
+    }
+
+    private func hamburgerMenu(in geometry: GeometryProxy) -> some View {
+        hamburgerMenuButton
+    }
+}

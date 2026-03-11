@@ -1,0 +1,77 @@
+/*
+  Localizable.strings (Hindi)
+  PillCounter
+
+  Created by HC on 05/11/25.
+*/
+
+// MARK: - GENERAL
+
+"APP_NAME" = "पिल काउंटर";
+"COMPANY_NAME" = "राइट टेक्नोलॉजीज़";
+"VERSION" = "संस्करण";
+
+// MARK: - LOGIN
+
+"REMEMBER_ME" = "मुझे याद रखें";
+"LOGIN_BUTTON" = "लॉगिन";
+"EMAIL_INPUT_FIELD_PLACEHOLDER" = "ईमेल पता";
+"EMAIL_ERROR_MESSAGE" = "कृपया अपना ईमेल पता दर्ज करें।";
+
+// MARK: - OTP VERIFICATION SCREEN
+
+"CODE_SENT_TEXT" = "सुरक्षा कोड भेज दिया गया है";
+"RESEND_CODE" = "कोड पुनः भेजें";
+"VERIFY_BUTTON" = "सत्यापित करें";
+
+// MARK: - DASHBOARD
+
+"COMPLETED" = "पूरा हुआ";
+"PARTIAL" = "आंशिक";
+
+// MARK: - FIXED COUNT
+
+"FIXED_COUNT_TITLE" = "निश्चित गिनती";
+"FIXED_COUNT_SUBTITLE" = "निश्चित मात्राओं की गिनती के लिए";
+
+// MARK: - REGULAR COUNT
+
+"REGULAR_COUNT_TITLE" = "नियमित गिनती";
+"REGULAR_COUNT_SUBTITLE" = "दैनिक नियमित गिनती के लिए";
+
+// MARK: - HAMBURGER MENU
+
+"HISTORY" = "इतिहास";
+"PROFILE" = "प्रोफ़ाइल";
+"SETTINGS" = "सेटिंग्स";
+"LOGOUT" = "लॉगआउट";
+
+"HISTORY_DURATION_MONTH" = "महीना";
+"HISTORY_DURATION_MONTHS" = "महीने";
+
+/* ============================= */
+/* MARK: PILL COUNT VIEW         */
+/* ============================= */
+"TOTAL_PILL_COUNT" = "कुल";
+"PILL_COUNT_HEADER" = "गोलियों की गिनती";
+
+/* ============================= */
+/* MARK: PROFILE                 */
+/* ============================= */
+"FIRST_NAME" = "पहला नाम";
+"LAST_NAME" = "अंतिम नाम";
+"PHARMACY_NAME" = "फार्मेसी का नाम";
+"NPI_ID" = "एनपीआई नंबर";
+"PHONE_NUMBER" = "फोन नंबर";
+"EMAIL" = "ईमेल";
+
+/* BUTTONS */
+"DELETE" = "हटाएँ";
+"SKIP" = "छोड़ें";
+"SAVE" = "सहेजें";
+
+/* ============================= */
+/* MARK: USER SETTINGS VIEW      */
+/* ============================= */
+"TOGGLE_BUTTON_TEXT" = "हमेशा नोट्स जोड़ने के लिए पूछें";
+"SAVE_HISTORY" = "इतिहास सहेजें";
