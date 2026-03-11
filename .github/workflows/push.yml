@@ -1,0 +1,81 @@
+name: iOS CI/CD
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+  pull-requests: read
+  actions: read
+
+jobs:
+  extract-version:
+    name: Extract App Version
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          set -euo pipefail
+  
+          PLIST_PATH=$(find . -path "*/Resources/Info.plist" | head -n 1)
+          
+          if [ -z "$PLIST_PATH" ]; then
+          echo "❌ Could not locate Info.plist"
+          exit 1
+          fi
+        
+          echo "Using plist at: $PLIST_PATH"
+          
+          VERSION=$(/usr/libexec/PlistBuddy \
+          -c "Print CFBundleShortVersionString" \
+          "$PLIST_PATH")
+          
+          if [ -z "$VERSION" ]; then
+          echo "❌ CFBundleShortVersionString empty"
+          exit 1
+          fi
+          
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION"
+
+  call-ci:
+    name: Call Reusable iOS CI
+    needs: extract-version
+    uses: Rite-Technologies-23/ops-rite-ios-pipeline/.github/workflows/push.yml@main
+    with:
+      scheme: "TestApp"
+      workspace: "TestApp.xcworkspace"
+      configuration: "Release"
+      coverage_threshold: "30.00"
+      build_archive: true
+
+  call-cd:
+    name: Call Reusable iOS CD
+    needs: [extract-version, call-ci]
+    if: github.event_name == 'pull-request' && github.ref == 'refs/heads/main'
+    uses: Rite-Technologies-23/ops-rite-ios-pipeline/.github/workflows/release.yml@main
+    with:
+      version: ${{ needs.extract-version.outputs.version }}
+      deploy_to_testflight: true
+      ios_bundle_id: "com.ritetechnologies.PillCounting"
+      enable_whats_new: false
+      whats_new_file: playstore/metadata/en-US/whatsnew.txt
+    secrets:
+      IOS_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      IOS_CERT_P12_BASE64: ${{ secrets.IOS_CERT_P12_BASE64 }}
+      IOS_CERT_PASSWORD: ${{ secrets.IOS_CERT_PASSWORD }}
+      IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+
+
+
