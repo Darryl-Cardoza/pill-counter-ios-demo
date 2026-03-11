@@ -56,25 +56,28 @@ jobs:
         run: |
           set -e
 
-          WORKSPACE=$(find . -name "*.xcworkspace" | head -n 1 || true)
+          # Find real workspace (ignore ones inside .xcodeproj)
+          WORKSPACE=$(find . -name "*.xcworkspace" -not -path "*/.xcodeproj/*" | head -n 1 || true)
+
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1 || true)
 
           if [ -n "$WORKSPACE" ]; then
             echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
             echo "project=" >> $GITHUB_OUTPUT
             FILE="$WORKSPACE"
+            TYPE="workspace"
           else
             echo "workspace=" >> $GITHUB_OUTPUT
             echo "project=$PROJECT" >> $GITHUB_OUTPUT
             FILE="$PROJECT"
+            TYPE="project"
           fi
 
-          echo "Detected file: $FILE"
+          echo "Detected $TYPE: $FILE"
 
-          # Extract scheme
+          # Extract scheme safely
           SCHEME=$(xcodebuild -list -json \
-            ${WORKSPACE:+-workspace "$WORKSPACE"} \
-            ${PROJECT:+-project "$PROJECT"} \
+            -$TYPE "$FILE" \
             | /usr/bin/python3 -c "import sys, json; print(json.load(sys.stdin)['project']['schemes'][0])")
 
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
