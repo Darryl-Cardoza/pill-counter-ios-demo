@@ -56,10 +56,9 @@ jobs:
         run: |
           set -e
 
-          # Detect workspace outside .xcodeproj
+          # Detect workspace (ignore internal ones)
           WORKSPACE=$(find . -name "*.xcworkspace" -not -path "*.xcodeproj/*" | head -n 1 || true)
 
-          # Detect project
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1 || true)
 
           if [ -n "$WORKSPACE" ]; then
@@ -76,21 +75,18 @@ jobs:
 
           echo "Detected $TYPE: $FILE"
 
-          # Extract scheme safely
-          JSON=$(xcodebuild -list -json -$TYPE "$FILE")
+          # Extract first scheme from xcodebuild output
+          SCHEME=$(xcodebuild -list -$TYPE "$FILE" \
+            | sed -n '/Schemes:/,/^$/p' \
+            | sed '1d' \
+            | head -n 1 \
+            | xargs)
 
-          SCHEME=$(echo "$JSON" | /usr/bin/python3 - <<'PY'
-          import sys, json
-          data=json.load(sys.stdin)
-          if "project" in data:
-            print(data["project"]["schemes"][0])
-          elif "workspace" in data:
-            print(data["workspace"]["schemes"][0])
-          else:
-            raise SystemExit("No scheme found")
-          PY
-          )
-          
+          if [ -z "$SCHEME" ]; then
+            echo "❌ No scheme detected. Ensure scheme is shared."
+            exit 1
+          fi
+
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
           echo "Detected scheme: $SCHEME"
   # -----------------------------
