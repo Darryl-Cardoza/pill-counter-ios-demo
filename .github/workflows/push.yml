@@ -56,33 +56,43 @@ jobs:
         run: |
           set -e
 
-          # Find real workspace (ignore ones inside .xcodeproj)
-          WORKSPACE=$(find . -name "*.xcworkspace" -not -path "*/.xcodeproj/*" | head -n 1 || true)
+          # Detect workspace outside .xcodeproj
+          WORKSPACE=$(find . -name "*.xcworkspace" -not -path "*.xcodeproj/*" | head -n 1 || true)
 
+          # Detect project
           PROJECT=$(find . -name "*.xcodeproj" | head -n 1 || true)
 
           if [ -n "$WORKSPACE" ]; then
+            TYPE="workspace"
+            FILE="$WORKSPACE"
             echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
             echo "project=" >> $GITHUB_OUTPUT
-            FILE="$WORKSPACE"
-            TYPE="workspace"
           else
+            TYPE="project"
+            FILE="$PROJECT"
             echo "workspace=" >> $GITHUB_OUTPUT
             echo "project=$PROJECT" >> $GITHUB_OUTPUT
-            FILE="$PROJECT"
-            TYPE="project"
           fi
 
           echo "Detected $TYPE: $FILE"
 
           # Extract scheme safely
-          SCHEME=$(xcodebuild -list -json \
-            -$TYPE "$FILE" \
-            | /usr/bin/python3 -c "import sys, json; print(json.load(sys.stdin)['project']['schemes'][0])")
+          JSON=$(xcodebuild -list -json -$TYPE "$FILE")
 
+          SCHEME=$(echo "$JSON" | /usr/bin/python3 - <<'PY'
+          import sys, json
+          data=json.load(sys.stdin)
+          if "project" in data:
+            print(data["project"]["schemes"][0])
+          elif "workspace" in data:
+            print(data["workspace"]["schemes"][0])
+          else:
+            raise SystemExit("No scheme found")
+          PY
+          )
+          
           echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
           echo "Detected scheme: $SCHEME"
-
   # -----------------------------
   # CI
   # -----------------------------
