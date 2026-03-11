@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
   
-          PLIST_PATH=$(find . -path "*/Resources/Info.plist" | head -n 1)
+          PLIST_PATH=$(find . -path "*/Info.plist" | head -n 1)
           
           if [ -z "$PLIST_PATH" ]; then
           echo "❌ Could not locate Info.plist"
